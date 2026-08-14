@@ -1,5 +1,7 @@
 # StudyEasy 🎓
 
+**[🚀 Live Demo](https://houssamnfissii.github.io/StudyEasy/)**
+
 A clean, single-file study dashboard for organizing modules, resources, notes, and your study schedule — with automatic Google Drive sync so your data follows you across devices.
 
 No build step, no backend, no database to host. It's one `index.html` file you can open locally or deploy anywhere static files are served.
