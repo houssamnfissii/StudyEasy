@@ -1,0 +1,4087 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>StudyEasy</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    /* ============================================================
+   StudyEasy — Design Tokens (optimized for phone + dark/light)
+   ============================================================ */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+    :root {
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 26px;
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+      --accent: #0A84FF;
+      --accent-rgb: 10, 132, 255;
+      --danger: #FF453A;
+      --success: #32D74B;
+      --warn: #FF9F0A;
+
+      --c-blue: #0A84FF;
+      --c-purple: #BF5AF2;
+      --c-green: #32D74B;
+      --c-orange: #FF9F0A;
+      --c-red: #FF453A;
+      --c-cyan: #64D2FF;
+      --c-pink: #FF375F;
+      --c-yellow: #FFD60A;
+
+      --ease: cubic-bezier(.4, 0, .2, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg-wallpaper-1: #0b0b10;
+      --bg-wallpaper-2: #15131f;
+      --window-bg: rgba(28, 28, 32, 0.72);
+      --panel-bg: rgba(255, 255, 255, 0.045);
+      --panel-bg-solid: #1c1c20;
+      --panel-border: rgba(255, 255, 255, 0.09);
+      --panel-border-strong: rgba(255, 255, 255, 0.14);
+      --sidebar-bg: rgba(20, 20, 24, 0.55);
+      --text-primary: rgba(255, 255, 255, 0.94);
+      --text-secondary: rgba(243, 215, 215, 0.56);
+      --text-tertiary: rgba(255, 255, 255, 0.34);
+      --field-bg: rgba(255, 255, 255, 0.06);
+      --field-border: rgba(255, 255, 255, 0.10);
+      --hover-bg: rgba(255, 255, 255, 0.06);
+      --active-bg: rgba(var(--accent-rgb), 0.18);
+      --shadow-window: 0 30px 90px -20px rgba(0, 0, 0, 0.65), 0 4px 24px rgba(0, 0, 0, 0.35);
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-card-hover: 0 18px 40px -16px rgba(0, 0, 0, 0.55);
+      --scrollbar: rgba(255, 255, 255, 0.15);
+    }
+
+    [data-theme="light"] {
+      --bg-wallpaper-1: #dfe4ec;
+      --bg-wallpaper-2: #eef1f6;
+      --window-bg: rgba(246, 246, 248, 0.78);
+      --panel-bg: rgba(255, 255, 255, 0.55);
+      --panel-bg-solid: #ffffff;
+      --panel-border: rgba(0, 0, 0, 0.07);
+      --panel-border-strong: rgba(0, 0, 0, 0.12);
+      --sidebar-bg: rgba(240, 240, 243, 0.6);
+      --text-primary: rgba(20, 20, 25, 0.92);
+      --text-secondary: rgba(20, 20, 25, 0.55);
+      --text-tertiary: rgba(20, 20, 25, 0.36);
+      --field-bg: rgba(0, 0, 0, 0.035);
+      --field-border: rgba(0, 0, 0, 0.09);
+      --hover-bg: rgba(0, 0, 0, 0.045);
+      --active-bg: rgba(var(--accent-rgb), 0.12);
+      --shadow-window: 0 30px 90px -24px rgba(20, 20, 40, 0.28), 0 4px 24px rgba(20, 20, 40, 0.08);
+      --shadow-card: 0 1px 2px rgba(20, 20, 40, 0.05);
+      --shadow-card-hover: 0 18px 40px -18px rgba(20, 20, 40, 0.22);
+      --scrollbar: rgba(0, 0, 0, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-ui);
+      color: var(--text-primary);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(10, 132, 255, 0.18), transparent 45%),
+        radial-gradient(circle at 85% 15%, rgba(191, 90, 242, 0.14), transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(50, 215, 75, 0.10), transparent 45%),
+        linear-gradient(160deg, var(--bg-wallpaper-1), var(--bg-wallpaper-2));
+      background-attachment: fixed;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+      background: rgba(var(--accent-rgb), 0.35);
+    }
+
+    ::-webkit-scrollbar {
+      width: 9px;
+      height: 9px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--scrollbar);
+      border-radius: 20px;
+      background-clip: padding-box;
+      border: 2px solid transparent;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    input,
+    textarea,
+    select {
+      font-family: inherit;
+    }
+
+    /* ---------- Auth Overlay ---------- */
+    #auth-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(10, 132, 255, 0.18), transparent 45%),
+        radial-gradient(circle at 85% 15%, rgba(191, 90, 242, 0.14), transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(50, 215, 75, 0.10), transparent 45%),
+        linear-gradient(160deg, var(--bg-wallpaper-1), var(--bg-wallpaper-2));
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.4s var(--ease);
+    }
+
+    .auth-card {
+      background: var(--window-bg);
+      border: 1px solid var(--panel-border-strong);
+      border-radius: var(--radius-xl);
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: var(--shadow-window);
+      max-width: 360px;
+      width: 90%;
+    }
+
+    .auth-card h1 {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0 0 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .auth-card p {
+      color: var(--text-secondary);
+      font-size: 13.5px;
+      margin: 0 0 24px;
+      line-height: 1.5;
+    }
+
+    /* ---------- App window shell ---------- */
+    #app-window {
+      position: absolute;
+      inset: 22px;
+      border-radius: var(--radius-xl);
+      background: var(--window-bg);
+      backdrop-filter: blur(40px) saturate(160%);
+      -webkit-backdrop-filter: blur(40px) saturate(160%);
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--shadow-window);
+      display: none;
+      /* Hidden initially, shown after auth */
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    @media (max-width: 860px) {
+      #app-window {
+        inset: 0;
+        border-radius: 0;
+      }
+    }
+
+    /* ---------- Top bar ---------- */
+    #topbar {
+      height: 52px;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--panel-border);
+      -webkit-app-region: drag;
+      flex-wrap: nowrap;
+    }
+
+    .traffic {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .traffic span {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
+    }
+
+    .traffic .red {
+      background: #FF5F57;
+    }
+
+    .traffic .yellow {
+      background: #FEBC2E;
+    }
+
+    .traffic .green {
+      background: #28C840;
+    }
+
+    #topbar .app-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    #topbar .app-title b {
+      color: var(--text-primary);
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    #topbar .search-trigger {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--field-bg);
+      border: 1px solid var(--field-border);
+      padding: 5px 9px;
+      border-radius: 9px;
+      color: var(--text-tertiary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .15s var(--ease);
+      min-width: 40px;
+      flex-shrink: 1;
+      overflow: hidden;
+    }
+
+    #topbar .search-trigger:hover {
+      border-color: var(--panel-border-strong);
+      color: var(--text-secondary);
+    }
+
+    #topbar .search-trigger .kbd {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: rgba(120, 120, 140, 0.18);
+      color: var(--text-tertiary);
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    #topbar .search-trigger span:not(.kbd) {
+      display: none;
+    }
+
+    @media (min-width: 500px) {
+      #topbar .search-trigger span:not(.kbd) {
+        display: inline;
+      }
+
+      #topbar .search-trigger {
+        min-width: 160px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      #topbar .app-title span {
+        display: none;
+      }
+
+      #topbar {
+        padding: 0 8px;
+        gap: 6px;
+      }
+
+      .traffic span {
+        width: 9px;
+        height: 9px;
+      }
+    }
+
+    /* ---------- Google account widget ---------- */
+    #google-account {
+      position: relative;
+      -webkit-app-region: no-drag;
+      flex-shrink: 0;
+      margin-left: 4px;
+    }
+
+    .ga-user {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      padding: 2px 6px 2px 2px;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      transition: all .15s var(--ease);
+    }
+
+    .ga-user:hover {
+      background: var(--hover-bg);
+      border-color: var(--field-border);
+    }
+
+    .ga-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--field-bg);
+      display: block;
+    }
+
+    .ga-name {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ga-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      width: 220px;
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card-hover);
+      padding: 6px;
+      display: none;
+      z-index: 80;
+      -webkit-app-region: no-drag;
+    }
+
+    .ga-menu.open {
+      display: block;
+    }
+
+    .ga-menu-head {
+      padding: 6px 10px 10px;
+      border-bottom: 1px solid var(--panel-border);
+      margin-bottom: 6px;
+    }
+
+    .ga-menu-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .ga-menu-email {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    .ga-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 7px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .ga-menu-item:hover {
+      background: var(--hover-bg);
+      color: var(--text-primary);
+    }
+
+    .ga-menu-danger {
+      color: var(--danger);
+    }
+
+    .ga-menu-danger:hover {
+      background: rgba(255, 69, 58, 0.12);
+      color: var(--danger);
+    }
+
+    .ga-menu-sub {
+      font-size: 10.5px;
+      color: var(--text-tertiary);
+      padding: 0 10px 8px;
+    }
+
+    .ga-menu-sub-warn {
+      color: var(--warn);
+    }
+
+    .ga-menu-warn {
+      color: var(--warn);
+    }
+
+    .ga-menu-warn:hover {
+      background: rgba(255, 159, 10, 0.12);
+      color: var(--warn);
+    }
+
+    .ga-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .ga-dot-ok {
+      background: var(--success);
+    }
+
+    .ga-dot-busy {
+      background: var(--accent);
+      animation: ga-pulse 1s ease-in-out infinite;
+    }
+
+    .ga-dot-warn {
+      background: var(--warn);
+    }
+
+    @keyframes ga-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .35; }
+    }
+
+    @media (max-width: 480px) {
+      .ga-name {
+        display: none;
+      }
+    }
+
+    /* ---------- Body layout ---------- */
+    #body-row {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+
+    #sidebar {
+      width: 200px;
+      min-width: 200px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 8px;
+      transition: width .2s var(--ease), min-width .2s var(--ease);
+      overflow-y: auto;
+    }
+
+    #sidebar.compact {
+      width: 60px;
+      min-width: 60px;
+    }
+
+    .sb-section-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-tertiary);
+      padding: 8px 8px 4px;
+      font-weight: 700;
+    }
+
+    .sb-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 9px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      transition: background .12s var(--ease), color .12s var(--ease);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .sb-item svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .sb-item:hover {
+      background: var(--hover-bg);
+      color: var(--text-primary);
+    }
+
+    .sb-item.active {
+      background: var(--active-bg);
+      color: var(--accent);
+    }
+
+    #sidebar.compact .sb-item span.label,
+    #sidebar.compact .sb-section-label {
+      display: none;
+    }
+
+    #sidebar.compact .sb-item {
+      justify-content: center;
+    }
+
+    #sidebar-bottom {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 8px;
+      border-top: 1px solid var(--panel-border);
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      padding: 2px 8px;
+    }
+
+    .status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+
+    .theme-switch {
+      display: flex;
+      gap: 3px;
+      padding: 2px;
+      background: var(--field-bg);
+      border-radius: 9px;
+      border: 1px solid var(--field-border);
+      margin: 0 4px;
+    }
+
+    .theme-switch button {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 5px 0;
+      border-radius: 7px;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-switch button.active {
+      background: var(--panel-bg-solid);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-card);
+    }
+
+    .theme-switch svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    #main {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      position: relative;
+      scroll-behavior: smooth;
+    }
+
+    #view {
+      padding: 20px 18px 60px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    #view.fade-in {
+      animation: viewFade .35s var(--ease);
+    }
+
+    @keyframes viewFade {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 860px) {
+      #view {
+        padding: 14px 12px 100px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      #view {
+        padding: 10px 8px 100px;
+      }
+    }
+
+    /* ---------- Typography ---------- */
+    h1.page-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0 0 2px;
+    }
+
+    @media (max-width: 480px) {
+      h1.page-title {
+        font-size: 19px;
+      }
+    }
+
+    p.page-sub {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin: 0 0 20px;
+    }
+
+    .eyebrow {
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--text-tertiary);
+      font-weight: 700;
+    }
+
+    /* ---------- Cards / Panels ---------- */
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      transition: box-shadow .2s var(--ease), transform .2s var(--ease), border-color .2s var(--ease);
+    }
+
+    .stat-card {
+      padding: 14px 16px;
+    }
+
+    .stat-card .num {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-top: 2px;
+    }
+
+    .stat-card .lbl {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .stat-card .icon-wrap {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .icon-wrap svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width:600px) {
+      .grid-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .stat-card {
+        padding: 12px 12px;
+      }
+
+      .stat-card .num {
+        font-size: 22px;
+      }
+    }
+
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width:820px) {
+      .dash-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    .progress-track {
+      height: 6px;
+      border-radius: 20px;
+      background: var(--field-bg);
+      overflow: hidden;
+      border: 1px solid var(--field-border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 20px;
+      background: linear-gradient(90deg, var(--accent), #64D2FF);
+      transition: width .5s var(--ease);
+    }
+
+    .module-card {
+      padding: 14px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .module-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card-hover);
+      border-color: var(--panel-border-strong);
+    }
+
+    .module-card .glow {
+      position: absolute;
+      top: -40%;
+      right: -30%;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0;
+      transition: opacity .25s var(--ease);
+      pointer-events: none;
+    }
+
+    .module-card:hover .glow {
+      opacity: 0.3;
+    }
+
+    .module-card .icon-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .module-card .icon-badge svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .module-card h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 2px;
+      letter-spacing: -0.01em;
+    }
+
+    .module-card p.desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin: 0 0 10px;
+      line-height: 1.4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .module-card .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+    }
+
+    .module-actions {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 3px;
+      opacity: 0;
+      transition: opacity .15s var(--ease);
+    }
+
+    .module-card:hover .module-actions {
+      opacity: 1;
+    }
+
+    .icon-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel-bg-solid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+
+    .icon-btn:hover {
+      color: var(--text-primary);
+      background: var(--hover-bg);
+    }
+
+    .icon-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    /* ---------- "On fire" state ---------- */
+    .module-card.on-fire {
+      border-color: rgba(255, 120, 20, 0.35);
+      animation: fireBorder 2.4s ease-in-out infinite;
+    }
+
+    .module-card.on-fire .glow {
+      background: radial-gradient(circle, rgba(255, 159, 10, 0.9), rgba(255, 69, 58, 0.5) 60%, transparent 75%) !important;
+      opacity: 0.28;
+      animation: fireGlowPulse 2.1s ease-in-out infinite;
+    }
+
+    .module-card.on-fire:hover .glow {
+      opacity: 0.55;
+    }
+
+    .fire-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(160deg, rgba(255, 159, 10, 0.22), rgba(255, 69, 58, 0.22));
+      border: 1px solid rgba(255, 140, 20, 0.4);
+      animation: fireFlicker 1.6s ease-in-out infinite;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .module-card.on-fire:hover .fire-badge {
+      opacity: 0;
+    }
+
+    .fire-badge svg {
+      width: 11px;
+      height: 11px;
+      color: #FF9F0A;
+      filter: drop-shadow(0 0 4px rgba(255, 120, 10, 0.8));
+    }
+
+    @keyframes fireBorder {
+
+      0%,
+      100% {
+        box-shadow: var(--shadow-card), 0 0 0 0 rgba(255, 110, 10, 0.0);
+      }
+
+      50% {
+        box-shadow: var(--shadow-card), 0 0 18px 1px rgba(255, 110, 10, 0.28);
+      }
+    }
+
+    @keyframes fireGlowPulse {
+
+      0%,
+      100% {
+        transform: scale(1) translateY(0);
+        opacity: 0.24;
+      }
+
+      50% {
+        transform: scale(1.18) translateY(-4px);
+        opacity: 0.42;
+      }
+    }
+
+    @keyframes fireFlicker {
+
+      0%,
+      100% {
+        transform: scale(1) rotate(0deg);
+        filter: brightness(1);
+      }
+
+      25% {
+        transform: scale(1.08) rotate(-3deg);
+        filter: brightness(1.15);
+      }
+
+      50% {
+        transform: scale(0.96) rotate(2deg);
+        filter: brightness(0.95);
+      }
+
+      75% {
+        transform: scale(1.05) rotate(-1deg);
+        filter: brightness(1.1);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .module-card.on-fire,
+      .module-card.on-fire .glow,
+      .fire-badge {
+        animation: none;
+      }
+    }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 9px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all .15s var(--ease);
+      white-space: nowrap;
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15), 0 0 0 0 rgba(var(--accent-rgb), 0);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px -4px rgba(var(--accent-rgb), 0.5);
+    }
+
+    .btn-secondary {
+      background: var(--field-bg);
+      border-color: var(--field-border);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--hover-bg);
+    }
+
+    .btn-danger {
+      background: rgba(255, 69, 58, 0.12);
+      color: var(--danger);
+      border-color: rgba(255, 69, 58, 0.25);
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 69, 58, 0.2);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+    }
+
+    .btn-ghost:hover {
+      background: var(--hover-bg);
+      color: var(--text-primary);
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 11.5px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-big-dashed {
+      border: 1.5px dashed var(--panel-border-strong);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all .18s var(--ease);
+      background: var(--panel-bg);
+    }
+
+    .btn-big-dashed:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--active-bg);
+    }
+
+    /* ---------- Forms ---------- */
+    .field-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .field {
+      width: 100%;
+      background: var(--field-bg);
+      border: 1px solid var(--field-border);
+      border-radius: 9px;
+      padding: 8px 11px;
+      font-size: 13px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color .15s var(--ease);
+    }
+
+    .field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
+    }
+
+    textarea.field {
+      resize: vertical;
+      min-height: 60px;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+
+    .form-row {
+      margin-bottom: 14px;
+    }
+
+    .color-swatches {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all .12s var(--ease);
+      position: relative;
+    }
+
+    .swatch.selected {
+      border-color: var(--text-primary);
+      transform: scale(1.12);
+    }
+
+    .icon-picker {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 5px;
+    }
+
+    @media (max-width:480px) {
+      .icon-picker {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
+    .icon-pick-btn {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      border: 1px solid var(--field-border);
+      background: var(--field-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+
+    .icon-pick-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .icon-pick-btn.selected {
+      background: var(--active-bg);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .seg-control {
+      display: flex;
+      background: var(--field-bg);
+      border: 1px solid var(--field-border);
+      border-radius: 9px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .seg-control button {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 6px 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      border-radius: 7px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+
+    .seg-control button.active {
+      background: var(--panel-bg-solid);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-card);
+    }
+
+    /* ---------- Modal ---------- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+      animation: fadeIn .18s var(--ease);
+    }
+
+    @media (max-width:480px) {
+      .modal-overlay {
+        padding: 0;
+        align-items: flex-end;
+      }
+
+      .modal-window {
+        max-width: 100%;
+        width: 100%;
+        max-height: 92vh;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      }
+
+      .modal-window.wide {
+        max-width: 100%;
+      }
+
+      @keyframes modalIn {
+        from {
+          opacity: 0;
+          transform: translateY(24px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .modal-window {
+      width: 100%;
+      max-width: 500px;
+      max-height: 86vh;
+      overflow: auto;
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--panel-border-strong);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-window);
+      animation: modalIn .2s var(--ease);
+    }
+
+    .modal-window.wide {
+      max-width: 720px;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(.96) translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .modal-header h2 {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .modal-body {
+      padding: 16px;
+    }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--panel-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .close-x {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      border: none;
+      background: var(--field-bg);
+    }
+
+    .close-x:hover {
+      color: var(--text-primary);
+      background: var(--hover-bg);
+    }
+
+    .close-x svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    /* ---------- Tabs ---------- */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid var(--panel-border);
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 8px 2px;
+      margin-right: 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-btn svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    /* ---------- Empty / loading ---------- */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state .icon-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--field-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .empty-state .icon-circle svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .empty-state h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0 0 4px;
+    }
+
+    .empty-state p {
+      font-size: 12.5px;
+      margin: 0 0 14px;
+      max-width: 280px;
+      line-height: 1.5;
+    }
+
+    /* ---------- Resource / note cards ---------- */
+    .resource-card {
+      padding: 12px;
+      display: flex;
+      gap: 10px;
+      cursor: pointer;
+      align-items: flex-start;
+    }
+
+    .resource-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card-hover);
+    }
+
+    .res-thumb {
+      width: 56px;
+      height: 42px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      background: var(--field-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: var(--text-tertiary);
+    }
+
+    .res-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .note-card {
+      padding: 14px;
+      cursor: pointer;
+    }
+
+    .note-card:hover {
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-2px);
+    }
+
+    .note-card h4 {
+      margin: 0 0 4px;
+      font-size: 13.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .note-card .snippet {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      max-height: 48px;
+      overflow: hidden;
+      font-family: var(--font-mono);
+    }
+
+    /* ---------- Schedule ---------- */
+    .week-grid-wrap {
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @media (max-width:1000px) {
+      .day-col {
+        scroll-snap-align: start;
+      }
+
+      .week-grid-wrap {
+        scroll-snap-type: x proximity;
+      }
+    }
+
+    .day-col {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-top: 3px solid var(--day-accent, var(--panel-border));
+      border-radius: var(--radius-md);
+      padding: 10px;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: background .18s var(--ease), border-color .18s var(--ease), box-shadow .18s var(--ease), transform .18s var(--ease);
+    }
+
+    .day-col:hover {
+      box-shadow: var(--shadow-card-hover);
+    }
+
+    .day-col.is-today {
+      background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.09), transparent 65%);
+      border-color: rgba(var(--accent-rgb), 0.4);
+      box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.18), var(--shadow-card-hover);
+      min-height: 210px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .day-col.drag-over {
+      background: var(--active-bg);
+      border-color: var(--accent);
+      transform: scale(1.015);
+    }
+
+    .day-col-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .day-col-head .dname {
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .day-col.is-today .dname {
+      color: var(--accent);
+      font-size: 11px;
+    }
+
+    .today-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+      animation: todayPulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes todayPulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: .5;
+        transform: scale(1.3);
+      }
+    }
+
+    .day-col-head .dcount {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      background: var(--field-bg);
+      padding: 0 6px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+
+    .day-col.is-today .dcount {
+      background: rgba(var(--accent-rgb), 0.16);
+      color: var(--accent);
+    }
+
+    .sched-item {
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--panel-border);
+      border-radius: 9px;
+      padding: 7px 8px;
+      cursor: grab;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: opacity .15s var(--ease), transform .15s var(--ease), box-shadow .15s var(--ease), border-color .15s var(--ease);
+    }
+
+    .sched-item:hover {
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-1px);
+      border-color: var(--panel-border-strong);
+    }
+
+    .sched-item:active {
+      cursor: grabbing;
+    }
+
+    .sched-item.dragging {
+      opacity: 0.35;
+    }
+
+    .sd-row-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .sched-item .sd-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sched-item .sd-icon svg {
+      width: 10px;
+      height: 10px;
+    }
+
+    .sched-item .sd-name {
+      font-size: 11.5px;
+      font-weight: 700;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-primary);
+    }
+
+    .sd-row-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      padding-left: 26px;
+      min-height: 16px;
+    }
+
+    .sched-item .sd-time {
+      font-size: 9.5px;
+      color: var(--text-tertiary);
+      font-family: var(--font-mono);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .sd-actions {
+      display: flex;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .sd-actions .icon-btn {
+      width: 18px;
+      height: 18px;
+      opacity: .55;
+      transition: opacity .15s var(--ease), background .15s var(--ease);
+    }
+
+    .sd-actions .icon-btn svg {
+      width: 8px;
+      height: 8px;
+    }
+
+    .sched-item:hover .sd-actions .icon-btn {
+      opacity: 1;
+    }
+
+    .sd-actions .icon-btn:hover {
+      opacity: 1;
+    }
+
+    .sched-item.completed {
+      opacity: 0.5;
+    }
+
+    .sched-item.completed .sd-name {
+      text-decoration: line-through;
+    }
+
+    .day-empty-drop {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-tertiary);
+      font-size: 11px;
+      text-align: center;
+      padding: 8px 4px;
+      border: 1.5px dashed var(--panel-border);
+      border-radius: 9px;
+      transition: border-color .15s var(--ease), color .15s var(--ease);
+    }
+
+    .day-col.drag-over .day-empty-drop {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .pool-panel {
+      padding: 10px;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .pool-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--panel-border);
+      padding: 4px 9px 4px 6px;
+      border-radius: 18px;
+      cursor: grab;
+      font-size: 11.5px;
+      font-weight: 600;
+      transition: transform .15s var(--ease), box-shadow .15s var(--ease), border-color .15s var(--ease);
+    }
+
+    .pool-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card-hover);
+      border-color: var(--panel-border-strong);
+    }
+
+    .pool-item .sd-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pool-item .sd-icon svg {
+      width: 10px;
+      height: 10px;
+    }
+
+    @media (max-width:700px) {
+      .day-col {
+        min-height: 150px;
+      }
+
+      .day-col.is-today {
+        min-height: 180px;
+      }
+    }
+
+    /* ---------- Command palette ---------- */
+    .cmdk-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(6px);
+      z-index: 300;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 10vh;
+    }
+
+    .cmdk-box {
+      width: 100%;
+      max-width: 500px;
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--panel-border-strong);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-window);
+      overflow: hidden;
+      animation: modalIn .16s var(--ease);
+    }
+
+    .cmdk-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .cmdk-input-row svg {
+      width: 16px;
+      height: 16px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    #cmdk-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .cmdk-results {
+      max-height: 320px;
+      overflow-y: auto;
+      padding: 6px;
+    }
+
+    .cmdk-group-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-tertiary);
+      font-weight: 700;
+      padding: 6px 8px 2px;
+    }
+
+    .cmdk-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .cmdk-item:hover,
+    .cmdk-item.sel {
+      background: var(--active-bg);
+    }
+
+    .cmdk-item svg {
+      width: 14px;
+      height: 14px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    .cmdk-item .cmdk-sub {
+      margin-left: auto;
+      font-size: 10.5px;
+      color: var(--text-tertiary);
+    }
+
+    /* ---------- Toasts ---------- */
+    #toast-root {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 400;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 90%;
+    }
+
+    .toast {
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--panel-border-strong);
+      box-shadow: var(--shadow-window);
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      animation: toastIn .22s var(--ease);
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .toast svg {
+      width: 14px;
+      height: 14px;
+      color: var(--success);
+    }
+
+    /* ---------- Resource viewer ---------- */
+    .viewer-overlay {
+      position: fixed;
+      inset: 12px;
+      z-index: 250;
+    }
+
+    @media (max-width:700px) {
+      .viewer-overlay {
+        inset: 0;
+      }
+    }
+
+    .viewer-window {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--panel-border-strong);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-window);
+      animation: modalIn .2s var(--ease);
+    }
+
+    .viewer-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .viewer-head .vt {
+      font-size: 13px;
+      font-weight: 700;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .viewer-body {
+      flex: 1;
+      min-height: 0;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .viewer-body iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+
+    .viewer-fallback {
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .viewer-fallback-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--field-bg);
+      border: 1px solid var(--field-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .viewer-fallback-icon svg {
+      width: 26px;
+      height: 26px;
+    }
+
+    .viewer-fallback-title {
+      color:#dfe4ec;
+      font-weight: 700;
+      font-size: 15px;
+      margin: 0;
+      max-width: 320px;
+    }
+
+    .viewer-fallback-host {
+      color:#FF375F;
+      font-size: 12.5px;
+      margin: 0 0 6px;
+    }
+
+    .viewer-fallback-note {
+      color: #eef1f6;
+      max-width: 300px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      margin: 0 0 10px;
+    }
+
+    /* ---------- Confirm dialog ---------- */
+    .confirm-box {
+      width: 100%;
+      max-width: 340px;
+    }
+
+    /* ---------- misc ---------- */
+    .mono {
+      font-family: var(--font-mono);
+    }
+
+    .flex-between {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mb-section {
+      margin-bottom: 24px;
+    }
+
+    .hairline {
+      height: 1px;
+      background: var(--panel-border);
+      border: none;
+      margin: 16px 0;
+    }
+
+    .checkbox-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pin-star {
+      color: var(--warn);
+    }
+
+    a.plain {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a.plain:hover {
+      text-decoration: underline;
+    }
+
+    /* mobile bottom nav */
+    #mobile-nav {
+      display: none;
+    }
+
+    @media (max-width:860px) {
+      #sidebar {
+        display: none;
+      }
+
+      #mobile-nav {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 150;
+        background: var(--sidebar-bg);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border-top: 1px solid var(--panel-border);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      .mnav-row {
+        display: flex;
+        justify-content: space-around;
+        padding: 6px 4px 4px;
+      }
+
+      .mnav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        color: var(--text-tertiary);
+        font-size: 9px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: color .15s var(--ease);
+      }
+
+      .mnav-item:active {
+        transform: scale(.94);
+      }
+
+      .mnav-item.active {
+        color: var(--accent);
+      }
+
+      .mnav-item svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .mnav-credit {
+        text-align: center;
+        font-size: 8.5px;
+        line-height: 1.2;
+        color: var(--text-tertiary);
+        padding: 1px 10px 4px;
+        border-top: 1px solid var(--panel-border);
+      }
+
+      .mnav-credit a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 700;
+        transition: color .15s var(--ease), text-shadow .15s var(--ease);
+      }
+
+      .mnav-credit a:hover,
+      .mnav-credit a:active {
+        color: var(--accent);
+        text-shadow: 0 0 10px rgba(var(--accent-rgb), 0.5);
+      }
+    }
+
+    /* ---------- Footer (desktop) ---------- */
+    #app-footer {
+      flex-shrink: 0;
+      text-align: center;
+      font-size: 10.5px;
+      line-height: 1.3;
+      color: var(--text-tertiary);
+      padding: 4px 12px;
+      border-top: 1px solid var(--panel-border);
+    }
+
+    #app-footer a {
+      color: var(--text-secondary);
+      font-weight: 700;
+      text-decoration: none;
+      transition: color .2s var(--ease), text-shadow .25s var(--ease);
+    }
+
+    #app-footer a:hover {
+      color: var(--accent);
+      text-shadow: 0 0 12px rgba(var(--accent-rgb), 0.55);
+    }
+
+    @media (max-width:860px) {
+      #app-footer {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body data-theme="dark">
+
+  <div id="auth-overlay">
+    <div class="auth-card">
+      <div style="margin-bottom:20px; display:flex; justify-content:center; color:var(--accent);">
+        <i data-lucide="graduation-cap" style="width:48px;height:48px;"></i>
+      </div>
+      <h1>StudyEasy</h1>
+      <p>Sign in with Google to sync your study modules and pick up right where you left off.</p>
+      <button class="btn btn-primary" id="auth-signin-btn"
+        style="width:100%; justify-content:center; padding:12px; font-size:14px; font-weight:700;">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#FFC107"
+            d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z" />
+          <path fill="#FF3D00"
+            d="M6.3 14.7l6.6 4.8C14.6 15.9 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.5 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+          <path fill="#4CAF50"
+            d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.6 35.4 26.9 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.5 5C9.6 39.6 16.2 44 24 44z" />
+          <path fill="#1976D2"
+            d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.6 5.6C41.6 35.9 44 30.4 44 24c0-1.3-.1-2.7-.4-3.5z" />
+        </svg>
+        <span style="margin-left:8px;">Sign in with Google</span>
+      </button>
+      <div id="auth-loading" style="display:none; margin-top:16px; font-size:13px; color:var(--text-tertiary);">
+        Authenticating...
+      </div>
+    </div>
+  </div>
+
+  <div id="app-window">
+    <div id="topbar">
+      <div class="traffic">
+        <span class="red"></span><span class="yellow"></span><span class="green"></span>
+      </div>
+      <div class="app-title"><i data-lucide="graduation-cap" style="width:15px;height:15px"></i><b>StudyEasy</b></div>
+      <div class="search-trigger" id="search-trigger-btn" style="-webkit-app-region:no-drag;">
+        <i data-lucide="search" style="width:13px;height:13px;"></i>
+        <span>Search…</span>
+        <span class="kbd">⌘K</span>
+      </div>
+      <div id="google-account"></div>
+    </div>
+
+    <div id="body-row">
+      <aside id="sidebar"></aside>
+      <main id="main">
+        <div id="view"></div>
+      </main>
+    </div>
+
+    <footer id="app-footer">
+      Developed by <a href="https://github.com/houssamnfissii" target="_blank" rel="noopener noreferrer">HOUSSAM
+        NFISSI</a>
+    </footer>
+
+    <nav id="mobile-nav"></nav>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="viewer-root"></div>
+  <div id="cmdk-root"></div>
+  <div id="toast-root"></div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ============================================================
+         GOOGLE SIGN-IN — CONFIGURATION
+         ============================================================ */
+      const GOOGLE_CLIENT_ID = "94862575157-8nsrtamo6qm45d0h6442msh3mpmbrt8e.apps.googleusercontent.com";
+      const GOOGLE_SCOPES = "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
+      const GDRIVE_FOLDER_NAME = "StudyEasy";
+      const GDRIVE_PDF_FOLDER_NAME = "PDFs";
+      const GDRIVE_DATA_FILE = "infra2026-data.json";
+      const GOOGLE_SESSION_KEY = "infra_hn_google_v1";
+      const STORAGE_KEY_PREFIX = "infra_hn_";
+      const APP_VERSION = "v1";
+
+      let currentUserId = "default";
+      let DB = null;
+
+      /* ---------------- Data helpers ---------------- */
+      function getStorageKey() { return STORAGE_KEY_PREFIX + APP_VERSION + "_" + currentUserId; }
+      function getSettingsKey() { return STORAGE_KEY_PREFIX + "settings_" + currentUserId; }
+
+      function loadData() {
+        try {
+          const raw = localStorage.getItem(getStorageKey());
+          if (!raw) return null;
+          return JSON.parse(raw);
+        } catch (e) { return null; }
+      }
+      function saveData(data) {
+        if (!data) return false;
+        try {
+          localStorage.setItem(getStorageKey(), JSON.stringify(data));
+          return true;
+        } catch (e) { return false; }
+      }
+      function loadSettings() {
+        try {
+          const raw = localStorage.getItem(getSettingsKey());
+          if (!raw) return { theme: "dark", density: "comfortable", sidebarSize: "default" };
+          return JSON.parse(raw);
+        } catch (e) { return { theme: "dark", density: "comfortable", sidebarSize: "default" }; }
+      }
+      function saveSettings(settings) {
+        if (!settings) return false;
+        try {
+          localStorage.setItem(getSettingsKey(), JSON.stringify(settings));
+          return true;
+        } catch (e) { return false; }
+      }
+      function deleteUserData() {
+        localStorage.removeItem(getStorageKey());
+        localStorage.removeItem(getSettingsKey());
+      }
+
+      function seedData() {
+        return {
+          modules: [],
+          resources: [],
+          notes: [],
+          schedule: [],
+          settings: { theme: "dark", density: "comfortable", sidebarSize: "default" },
+          // Epoch timestamp ensures that any remote Drive backup will correctly overwrite local empty setup on a new PC
+          meta: { lastModified: new Date(0).toISOString() }
+        };
+      }
+
+      function persist() {
+        if (!DB) return;
+        DB.meta = DB.meta || {};
+        DB.meta.lastModified = new Date().toISOString();
+        saveData(DB);
+        syncToDriveDebounced();
+      }
+
+      /* ============================================================
+         INIT APP FOR LOGGED-IN USER
+         ============================================================ */
+      function initAppForUser() {
+        document.getElementById('auth-overlay').style.display = 'none';
+        document.getElementById('app-window').style.display = 'flex';
+        if (DB && Array.isArray(DB.resources)) DB.resources.forEach(resourceProgressDefaults);
+        applyTheme();
+        renderGoogleWidget();
+        render();
+      }
+
+      /* ============================================================
+         GOOGLE SIGN-IN + DRIVE SYNC
+         ============================================================ */
+      const Google = {
+        tokenClient: null,
+        accessToken: null,
+        tokenExpiresAt: 0,
+        profile: null,
+        folderId: null,
+        pdfFolderId: null,
+        fileId: null,
+        signedIn: false,
+        ready: false,
+        lastSynced: null,
+        syncNeedsReconnect: false,
+        syncPending: false
+      };
+
+      function loadGoogleSession() {
+        try {
+          const raw = localStorage.getItem(GOOGLE_SESSION_KEY);
+          if (!raw) return;
+          const saved = JSON.parse(raw);
+          Google.profile = saved.profile || null;
+          Google.folderId = saved.folderId || null;
+          Google.pdfFolderId = saved.pdfFolderId || null;
+          Google.fileId = saved.fileId || null;
+          Google.lastSynced = saved.lastSynced || null;
+          if (Google.profile) Google.signedIn = true;
+          if (saved.userId) currentUserId = saved.userId;
+        } catch (e) { }
+      }
+      function saveGoogleSession() {
+        try {
+          localStorage.setItem(GOOGLE_SESSION_KEY, JSON.stringify({
+            profile: Google.profile, folderId: Google.folderId, pdfFolderId: Google.pdfFolderId,
+            fileId: Google.fileId, lastSynced: Google.lastSynced, userId: currentUserId
+          }));
+        } catch (e) { }
+      }
+      function clearGoogleSession() {
+        localStorage.removeItem(GOOGLE_SESSION_KEY);
+        Google.profile = null; Google.folderId = null; Google.pdfFolderId = null;
+        Google.fileId = null; Google.accessToken = null; Google.signedIn = false; Google.lastSynced = null;
+        Google.syncNeedsReconnect = false; Google.syncPending = false;
+      }
+
+      function initGoogle() {
+        if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+          setTimeout(initGoogle, 250);
+          return;
+        }
+        loadGoogleSession();
+        lucide.createIcons({ nodes: [document.getElementById('auth-overlay')] });
+
+        if (Google.profile && currentUserId !== "default") {
+          // Optimistic background load for existing session
+          DB = loadData() || seedData();
+          if (!DB.settings) DB.settings = loadSettings();
+
+          document.getElementById('auth-signin-btn').style.display = 'none';
+          document.getElementById('auth-loading').style.display = 'block';
+          document.getElementById('auth-loading').textContent = "Restoring session...";
+
+          initAppForUser(); // let them inside the app directly
+
+          Google.tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: GOOGLE_SCOPES,
+            // Telling Google which account we mean means it can skip the
+            // account-chooser step entirely on a silent refresh — this is the
+            // single biggest thing that cuts down on "login again" interruptions.
+            login_hint: Google.profile.email || undefined,
+            callback: handleTokenResponse
+          });
+          Google.ready = true;
+
+          // Promptless request to refresh token & trigger handleTokenResponse for sync in background
+          try { Google.tokenClient.requestAccessToken({ prompt: "" }); } catch (e) { }
+          scheduleProactiveTokenRefresh();
+
+        } else {
+          // Need manual login
+          Google.tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: GOOGLE_SCOPES,
+            callback: handleTokenResponse
+          });
+          Google.ready = true;
+
+          const btn = document.getElementById("auth-signin-btn");
+          btn.onclick = () => {
+            Google.tokenClient.requestAccessToken({ prompt: "consent" });
+          };
+        }
+      }
+
+      async function handleTokenResponse(resp) {
+        const isBackgroundAuth = !!DB; // If DB is loaded, it's a background refresh
+
+        if (resp.error) {
+          if (!isBackgroundAuth) {
+            const authBtn = document.getElementById('auth-signin-btn');
+            const loadingText = document.getElementById('auth-loading');
+            if (authBtn) authBtn.style.display = 'flex';
+            if (loadingText) loadingText.style.display = 'none';
+          } else {
+            // We're already inside the app with local data — a failed silent
+            // refresh just means Drive sync is paused, never kick the user
+            // back out to a login screen for this.
+            Google.syncNeedsReconnect = true;
+            renderGoogleWidget();
+          }
+          if (resp.error !== "immediate_failed" && resp.error !== "user_logged_out") {
+            console.warn("Google silent refresh failed:", resp.error);
+          }
+          return;
+        }
+        Google.accessToken = resp.access_token;
+        Google.tokenExpiresAt = Date.now() + ((resp.expires_in || 3600) * 1000) - 60000;
+        Google.signedIn = true;
+        Google.syncNeedsReconnect = false;
+        scheduleProactiveTokenRefresh();
+
+        if (!isBackgroundAuth) {
+          const authBtn = document.getElementById('auth-signin-btn');
+          const loadingText = document.getElementById('auth-loading');
+          if (authBtn) authBtn.style.display = 'none';
+          if (loadingText) { loadingText.style.display = 'block'; loadingText.textContent = "Fetching profile & syncing..."; }
+        }
+
+        try {
+          await fetchGoogleProfile();
+          // Use an identifier tied to the Google account to isolate local data correctly
+          currentUserId = Google.profile.email || Google.profile.sub || "user_" + Date.now();
+
+          // For fresh logins, we now securely have the currentUserId. Proceed to pull local data
+          if (!isBackgroundAuth) {
+            DB = loadData() || seedData();
+            if (!DB.settings) DB.settings = loadSettings();
+          }
+
+          saveGoogleSession();
+          await ensureDriveFile();
+
+          if (!isBackgroundAuth) {
+            initAppForUser();
+            toast(`Signed in as ${Google.profile.given_name || Google.profile.name}`);
+          } else {
+            renderGoogleWidget(); // Update UI if we were already in background mode
+          }
+        } catch (e) {
+          console.error("Google Drive setup failed", e);
+          if (!isBackgroundAuth) {
+            const loadingText = document.getElementById('auth-loading');
+            const authBtn = document.getElementById('auth-signin-btn');
+            if (loadingText) loadingText.textContent = "Error setting up Drive sync. Please try again.";
+            if (authBtn) authBtn.style.display = 'flex';
+            toast("Drive sync setup failed", "error");
+          }
+        }
+      }
+
+      async function fetchGoogleProfile() {
+        const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: { Authorization: `Bearer ${Google.accessToken}` }
+        });
+        if (!res.ok) throw new Error("userinfo request failed");
+        const data = await res.json();
+        Google.profile = { name: data.name || "", given_name: data.given_name || "", email: data.email || "", picture: data.picture || "" };
+      }
+
+      function ensureAccessToken() {
+        return new Promise((resolve, reject) => {
+          if (Google.accessToken && Date.now() < Google.tokenExpiresAt) { resolve(Google.accessToken); return; }
+          if (!Google.tokenClient) { reject(new Error("Google sign-in not ready")); return; }
+          const prevCallback = Google.tokenClient.callback;
+          Google.tokenClient.callback = (resp) => {
+            Google.tokenClient.callback = prevCallback;
+            if (resp.error) {
+              Google.syncNeedsReconnect = true;
+              renderGoogleWidget();
+              reject(resp);
+              return;
+            }
+            Google.syncNeedsReconnect = false;
+            Google.accessToken = resp.access_token;
+            Google.tokenExpiresAt = Date.now() + ((resp.expires_in || 3600) * 1000) - 60000;
+            resolve(Google.accessToken);
+          };
+          // prompt:"" = silent refresh. login_hint tells Google exactly which
+          // account we mean so it can skip the account-chooser step if it does
+          // need to briefly reconfirm the session.
+          Google.tokenClient.requestAccessToken({ prompt: "", login_hint: Google.profile ? Google.profile.email : undefined });
+        });
+      }
+
+      // Refresh the access token a few minutes before it actually expires,
+      // while the tab is idle/visible, instead of waiting for a write to fail.
+      // This is what makes edits feel "always synced" — the token is usually
+      // already warm by the time the user makes a change.
+      let proactiveRefreshTimer = null;
+      function scheduleProactiveTokenRefresh() {
+        if (proactiveRefreshTimer) clearTimeout(proactiveRefreshTimer);
+        if (!Google.signedIn) return;
+        const msUntilRefresh = Math.max(30000, (Google.tokenExpiresAt || Date.now()) - Date.now() - 5 * 60 * 1000);
+        proactiveRefreshTimer = setTimeout(async () => {
+          try { await ensureAccessToken(); }
+          catch (e) { /* stays silent — user isn't interrupted, see syncNeedsReconnect */ }
+          scheduleProactiveTokenRefresh();
+        }, msUntilRefresh);
+      }
+
+      async function driveFetch(url, opts = {}) {
+        const token = await ensureAccessToken();
+        const headers = Object.assign({}, opts.headers || {}, { Authorization: `Bearer ${token}` });
+        const res = await fetch(url, Object.assign({}, opts, { headers }));
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          throw new Error(`Drive API ${res.status}: ${txt}`);
+        }
+        return res;
+      }
+
+      async function findOrCreateFolder(name, parentId) {
+        let q = `name='${name.replace(/'/g, "\\'")}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+        if (parentId) q += ` and '${parentId}' in parents`;
+        const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`);
+        const data = await res.json();
+        if (data.files && data.files.length) return data.files[0].id;
+        const body = { name, mimeType: "application/vnd.google-apps.folder" };
+        if (parentId) body.parents = [parentId];
+        const createRes = await driveFetch("https://www.googleapis.com/drive/v3/files", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+        });
+        const created = await createRes.json();
+        return created.id;
+      }
+
+      async function ensureDriveFolder() {
+        if (Google.folderId) return Google.folderId;
+        Google.folderId = await findOrCreateFolder(GDRIVE_FOLDER_NAME);
+        saveGoogleSession();
+        return Google.folderId;
+      }
+      async function ensurePdfFolder() {
+        if (Google.pdfFolderId) return Google.pdfFolderId;
+        const parent = await ensureDriveFolder();
+        Google.pdfFolderId = await findOrCreateFolder(GDRIVE_PDF_FOLDER_NAME, parent);
+        saveGoogleSession();
+        return Google.pdfFolderId;
+      }
+
+      async function ensureDriveFile() {
+        const folderId = await ensureDriveFolder();
+        if (!Google.fileId) {
+          const q = `name='${GDRIVE_DATA_FILE}' and '${folderId}' in parents and trashed=false`;
+          const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`);
+          const data = await res.json();
+          if (data.files && data.files.length) Google.fileId = data.files[0].id;
+        }
+        if (Google.fileId) {
+          await pullFromDrive();
+        } else {
+          await pushToDrive(true);
+          toast("Backed up to Google Drive");
+        }
+        Google.lastSynced = new Date().toISOString();
+        saveGoogleSession();
+      }
+
+      async function pullFromDrive() {
+        if (!Google.fileId) return;
+        const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${Google.fileId}?alt=media`);
+        const remote = await res.json();
+        const remoteTime = remote.meta && remote.meta.lastModified ? new Date(remote.meta.lastModified).getTime() : 0;
+        const localTime = DB.meta && DB.meta.lastModified ? new Date(DB.meta.lastModified).getTime() : 0;
+
+        // If local setup is fresh (epoch localTime) OR remote has a newer modified date, pull remote.
+        if (remoteTime > localTime && (remote.modules || remote.resources || remote.notes || remote.schedule)) {
+          DB = remote;
+          if (!DB.settings) DB.settings = loadSettings();
+          if (!DB.meta) DB.meta = { lastModified: new Date().toISOString() };
+          saveData(DB);
+          applyTheme();
+          render();
+          toast("Synced latest data from Google Drive");
+        } else if (localTime > remoteTime) {
+          // Update Drive since we have newer local edits
+          await pushToDrive(false);
+        }
+        Google.lastSynced = new Date().toISOString();
+        saveGoogleSession();
+      }
+
+      async function pushToDrive(isCreate) {
+        if (!DB) return;
+        DB.meta = DB.meta || { lastModified: new Date().toISOString() };
+        const body = JSON.stringify(DB);
+        if (isCreate || !Google.fileId) {
+          const folderId = await ensureDriveFolder();
+          const boundary = "infra2026_" + uid();
+          const metadata = { name: GDRIVE_DATA_FILE, parents: [folderId], mimeType: "application/json" };
+          const multipartBody =
+            `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+            `--${boundary}\r\nContent-Type: application/json\r\n\r\n${body}\r\n` +
+            `--${boundary}--`;
+          const res = await driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id", {
+            method: "POST", headers: { "Content-Type": `multipart/related; boundary=${boundary}` }, body: multipartBody
+          });
+          const created = await res.json();
+          Google.fileId = created.id;
+        } else {
+          await driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${Google.fileId}?uploadType=media`, {
+            method: "PATCH", headers: { "Content-Type": "application/json" }, body
+          });
+        }
+        Google.lastSynced = new Date().toISOString();
+        saveGoogleSession();
+      }
+
+      const syncToDriveDebounced = debounce(() => {
+        if (Google.signedIn && Google.fileId && Google.tokenClient) {
+          Google.syncPending = true;
+          renderGoogleWidget();
+          pushToDrive(false)
+            .then(() => { Google.syncPending = false; renderGoogleWidget(); })
+            .catch(e => {
+              // Never interrupt the user for this — their edit is already safe
+              // in localStorage. Just flag it so the account menu shows a
+              // one-tap "Reconnect" option, and try again shortly.
+              console.error("Drive sync failed", e);
+              Google.syncPending = false;
+              renderGoogleWidget();
+              retryDriveSyncSoon();
+            });
+        }
+      }, 1500);
+
+      let driveRetryTimer = null;
+      function retryDriveSyncSoon() {
+        if (driveRetryTimer) return;
+        driveRetryTimer = setTimeout(() => {
+          driveRetryTimer = null;
+          if (Google.signedIn && Google.fileId && Google.tokenClient && !Google.syncNeedsReconnect) {
+            syncToDriveDebounced();
+          }
+        }, 60000);
+      }
+
+      // Catch up the moment the tab regains focus or the network comes back —
+      // this is what keeps things feeling "real time" across devices without
+      // asking the user to do anything.
+      document.addEventListener("visibilitychange", () => {
+        const modalOpen = document.getElementById('modal-root') && document.getElementById('modal-root').innerHTML;
+        if (!document.hidden && !modalOpen && Google.signedIn && Google.fileId) pullFromDrive().catch(() => { });
+      });
+      window.addEventListener("online", () => {
+        if (Google.signedIn && Google.fileId) syncToDriveDebounced();
+      });
+
+      async function uploadFileToDrive(file) {
+        const folderId = await ensurePdfFolder();
+        const token = await ensureAccessToken();
+        const metadata = { name: file.name, parents: [folderId] };
+        const form = new FormData();
+        form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+        form.append("file", file);
+        const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,webContentLink", {
+          method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form
+        });
+        if (!res.ok) throw new Error("Upload failed: " + res.status);
+        const data = await res.json();
+        try {
+          await driveFetch(`https://www.googleapis.com/drive/v3/files/${data.id}/permissions`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role: "reader", type: "anyone" })
+          });
+        } catch (e) { }
+        return data;
+      }
+
+      function googleSignOut() {
+        try {
+          if (Google.accessToken && window.google && google.accounts && google.accounts.oauth2) {
+            google.accounts.oauth2.revoke(Google.accessToken, () => { });
+          }
+        } catch (e) { }
+        if (proactiveRefreshTimer) { clearTimeout(proactiveRefreshTimer); proactiveRefreshTimer = null; }
+        if (driveRetryTimer) { clearTimeout(driveRetryTimer); driveRetryTimer = null; }
+        clearGoogleSession();
+
+        // Clean up user data from this device to enforce safety/isolation
+        deleteUserData();
+
+        DB = null;
+        currentUserId = "default";
+
+        document.getElementById('app-window').style.display = 'none';
+        document.getElementById('auth-overlay').style.display = 'flex';
+
+        const authBtn = document.getElementById('auth-signin-btn');
+        const loadingText = document.getElementById('auth-loading');
+        if (authBtn) authBtn.style.display = 'flex';
+        if (loadingText) loadingText.style.display = 'none';
+
+        toast("Signed out — local data cleared");
+      }
+
+      function renderGoogleWidget() {
+        const el = document.getElementById("google-account");
+        if (!el) return;
+        if (Google.profile) {
+          const statusDot = Google.syncNeedsReconnect ? "ga-dot-warn" : (Google.syncPending ? "ga-dot-busy" : "ga-dot-ok");
+          const statusLine = Google.syncNeedsReconnect
+            ? `<div class="ga-menu-sub ga-menu-sub-warn">Sync paused — tap Reconnect</div>`
+            : Google.syncPending
+              ? `<div class="ga-menu-sub">Syncing…</div>`
+              : `<div class="ga-menu-sub">${Google.lastSynced ? "Synced " + fmtDate(Google.lastSynced) : "Not yet synced"}</div>`;
+          el.innerHTML = `
+      <div class="ga-user" id="ga-user-btn">
+        ${Google.profile.picture ? `<img class="ga-avatar" src="${esc(Google.profile.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'">` : ""}
+        <span class="ga-status-dot ${statusDot}"></span>
+        <span class="ga-name">${esc(Google.profile.given_name || Google.profile.name || "")}</span>
+        ${icon("chevron-down", 'style="width:11px;height:11px"')}
+      </div>
+      <div class="ga-menu" id="ga-menu">
+        <div class="ga-menu-head">
+          <div class="ga-menu-name">${esc(Google.profile.name || "")}</div>
+          <div class="ga-menu-email">${esc(Google.profile.email || "")}</div>
+        </div>
+        ${Google.syncNeedsReconnect
+              ? `<div class="ga-menu-item ga-menu-warn" id="ga-sync-now">${icon("refresh-cw", 'style="width:13px;height:13px"')}<span>Reconnect</span></div>`
+              : `<div class="ga-menu-item" id="ga-sync-now">${icon("refresh-cw", 'style="width:13px;height:13px"')}<span>Sync now</span></div>`}
+        ${statusLine}
+        <div class="ga-menu-item ga-menu-danger" id="ga-signout">${icon("log-out", 'style="width:13px;height:13px"')}<span>Sign out</span></div>
+      </div>
+    `;
+        }
+        renderIcons(el);
+        bindGoogleWidgetEvents();
+      }
+
+      function bindGoogleWidgetEvents() {
+        const userBtn = document.getElementById("ga-user-btn");
+        const menu = document.getElementById("ga-menu");
+        if (userBtn && menu) {
+          userBtn.addEventListener("click", (e) => { e.stopPropagation(); menu.classList.toggle("open"); });
+        }
+        const syncBtn = document.getElementById("ga-sync-now");
+        if (syncBtn) syncBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          toast("Syncing with Google Drive…");
+          try {
+            await ensureAccessToken(); // this is the one moment a reconnect prompt is allowed to show
+            await ensureDriveFile();
+            toast("Synced");
+          }
+          catch (err) { console.error(err); toast("Sync failed — will retry automatically", "error"); }
+          if (menu) menu.classList.remove("open");
+          renderGoogleWidget();
+        });
+        const signoutBtn = document.getElementById("ga-signout");
+        if (signoutBtn) signoutBtn.addEventListener("click", (e) => { e.stopPropagation(); googleSignOut(); });
+      }
+
+      /* ---------------- Constants ---------------- */
+      const COLORS = {
+        blue: "#0A84FF", purple: "#BF5AF2", green: "#32D74B", orange: "#FF9F0A",
+        red: "#FF453A", cyan: "#64D2FF", pink: "#FF375F", yellow: "#FFD60A"
+      };
+      const ICONS = ["server", "terminal", "network", "cloud", "shield", "database", "container",
+        "git-branch", "code", "cpu", "globe", "lock", "monitor", "hard-drive", "wifi", "boxes"];
+      const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+      const DAY_LABEL = { monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday", thursday: "Thursday", friday: "Friday", saturday: "Saturday", sunday: "Sunday" };
+      const STATUS_OPTS = ["Not Started", "In Progress", "Completed", "Paused"];
+      const PRIORITY_OPTS = ["Low", "Medium", "High", "Critical"];
+      const RESOURCE_TYPES = [
+        { key: "youtube", label: "YouTube", icon: "youtube" },
+        { key: "pdf", label: "PDF", icon: "file-text" },
+        { key: "website", label: "Website", icon: "globe" },
+        { key: "link", label: "Link", icon: "link" }
+      ];
+      // How long (seconds) of focused viewing counts as "fully studied" per resource type.
+      // Progress ticks up in real time while the resource is open and the tab is in focus.
+      const RESOURCE_TARGETS = { youtube: 480, pdf: 480, website: 300, link: 120 };
+      function resourceProgressDefaults(r) {
+        if (r.progress == null) r.progress = 0;
+        if (!r.status) r.status = "Not Started";
+        if (r.timeSpent == null) r.timeSpent = 0;
+        return r;
+      }
+
+      /* ---------------- Utilities ---------------- */
+      const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+      const now = () => new Date().toISOString();
+      const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const fmtDate = (iso) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+      function toast(msg, kind = "success") {
+        const root = document.getElementById("toast-root");
+        const el = document.createElement("div");
+        el.className = "toast";
+        el.innerHTML = `<i data-lucide="${kind === 'error' ? 'alert-circle' : 'check-circle-2'}"></i><span>${esc(msg)}</span>`;
+        root.appendChild(el);
+        lucide.createIcons({ nodes: [el] });
+        setTimeout(() => { el.style.transition = "opacity .2s ease, transform .2s ease"; el.style.opacity = "0"; el.style.transform = "translateY(6px)"; setTimeout(() => el.remove(), 200); }, 2600);
+      }
+
+      function icon(name, attrs = "") { return `<i data-lucide="${name}" ${attrs}></i>`; }
+      function renderIcons(container) { lucide.createIcons({ nodes: container ? [container] : undefined }); }
+
+      /* ---------------- State ---------------- */
+      const State = {
+        route: "dashboard",
+        moduleId: null,
+        resourceFilter: "all",
+        moduleFilter: "all",
+        moduleTab: "resources",
+        sidebarCompact: false
+      };
+
+      const getModule = id => DB.modules.find(m => m.id === id);
+      const moduleResources = id => DB.resources.filter(r => r.moduleId === id);
+      const moduleNotes = id => DB.notes.filter(n => n.moduleId === id);
+      const moduleSchedule = id => DB.schedule.filter(s => s.moduleId === id);
+      function updateModuleTimestamp(id) { const m = getModule(id); if (m) m.updatedAt = now(); }
+      function setProgress(moduleId, val) {
+        const m = getModule(moduleId); if (!m) return;
+        const was100 = m.progress >= 100;
+        m.progress = Math.max(0, Math.min(100, val));
+        if (m.progress >= 100) { m.status = "Completed"; if (!was100) celebrate(); }
+        else if (m.status === "Completed" && m.progress < 100) { m.status = "In Progress"; }
+        m.updatedAt = now();
+        persist();
+      }
+      function celebrate() { toast("Module completed 🎉", "success"); }
+
+      // Once a module has resources, its progress is derived automatically from how much
+      // of each resource has been studied — no manual slider needed.
+      function autoSyncModuleProgress(moduleId) {
+        const m = getModule(moduleId); if (!m) return;
+        const res = moduleResources(moduleId);
+        if (!res.length) return;
+        res.forEach(resourceProgressDefaults);
+        const avg = Math.round(res.reduce((a, r) => a + (r.progress || 0), 0) / res.length);
+        const was100 = m.progress >= 100;
+        m.progress = avg;
+        if (avg >= 100) { m.status = "Completed"; if (!was100) celebrate(); }
+        else if (avg > 0) { m.status = "In Progress"; }
+        else if (m.status !== "Paused") { m.status = "Not Started"; }
+        m.updatedAt = now();
+      }
+
+      /* ---------------- Sidebar ---------------- */
+      const NAV_ITEMS = [
+        { key: "dashboard", label: "Dashboard", icon: "layout-dashboard" },
+        { key: "modules", label: "Modules", icon: "layers" },
+        { key: "schedule", label: "Schedule", icon: "calendar-days" },
+        { key: "resources", label: "Resources", icon: "library" },
+        { key: "notes", label: "Notes", icon: "notebook-pen" },
+        { key: "settings", label: "Settings", icon: "settings" }
+      ];
+
+      function renderSidebar() {
+        if (!DB) return;
+        const sb = document.getElementById("sidebar");
+        sb.className = State.sidebarCompact ? "compact" : "";
+        const activeTop = ["dashboard", "modules", "schedule", "resources", "notes", "settings"].includes(State.route) ? State.route : (State.route === "module" ? "modules" : State.route);
+        sb.innerHTML = `
+    <div class="sb-section-label">Navigate</div>
+    ${NAV_ITEMS.map(it => `
+      <div class="sb-item ${activeTop === it.key ? 'active' : ''}" data-nav="${it.key}" title="${it.label}">
+        ${icon(it.icon)}<span class="label">${it.label}</span>
+      </div>`).join("")}
+    <div id="sidebar-bottom">
+      <div class="theme-switch">
+        <button data-theme-opt="light" class="${DB.settings.theme === 'light' ? 'active' : ''}" title="Light">${icon('sun')}</button>
+        <button data-theme-opt="dark" class="${DB.settings.theme === 'dark' ? 'active' : ''}" title="Dark">${icon('moon')}</button>
+        <button data-theme-opt="system" class="${DB.settings.theme === 'system' ? 'active' : ''}" title="System">${icon('monitor')}</button>
+      </div>
+      <div class="status-row"><span class="status-dot"></span><span class="label">Ready</span></div>
+    </div>
+  `;
+        renderIcons(sb);
+      }
+
+      function renderMobileNav() {
+        const nav = document.getElementById("mobile-nav");
+        const activeTop = ["dashboard", "modules", "schedule", "resources", "notes", "settings"].includes(State.route) ? State.route : (State.route === "module" ? "modules" : State.route);
+        nav.innerHTML = `
+    <div class="mnav-row">
+      ${NAV_ITEMS.slice(0, 5).map(it => `
+        <div class="mnav-item ${activeTop === it.key ? 'active' : ''}" data-nav="${it.key}">
+          ${icon(it.icon)}<span>${it.label.split(' ')[0]}</span>
+        </div>`).join("")}
+    </div>
+    <div class="mnav-credit">Developed by <a href="https://github.com/houssamnfissii" target="_blank" rel="noopener noreferrer">HOUSSAM NFISSI</a></div>
+  `;
+        renderIcons(nav);
+      }
+
+      /* ---------------- Router ---------------- */
+      function navigate(route, params = {}) {
+        State.route = route;
+        Object.assign(State, params);
+        render();
+        document.getElementById("main").scrollTop = 0;
+      }
+
+      function render() {
+        if (!DB) return;
+        renderSidebar();
+        renderMobileNav();
+        const view = document.getElementById("view");
+        switch (State.route) {
+          case "dashboard": view.innerHTML = renderDashboard(); break;
+          case "modules": view.innerHTML = renderModulesPage(); break;
+          case "module": view.innerHTML = renderModuleDetail(State.moduleId); break;
+          case "schedule": view.innerHTML = renderSchedulePage(); break;
+          case "resources": view.innerHTML = renderResourcesPage(); break;
+          case "notes": view.innerHTML = renderNotesPage(); break;
+          case "settings": view.innerHTML = renderSettingsPage(); break;
+          default: view.innerHTML = renderDashboard();
+        }
+        renderIcons(view);
+        attachViewHandlers();
+        if (State.route === "schedule") initScheduleDnD();
+        view.classList.remove("fade-in");
+        void view.offsetWidth;
+        view.classList.add("fade-in");
+      }
+
+      /* ---------------- Dashboard ---------------- */
+      function renderDashboard() {
+        const total = DB.modules.length;
+        const completed = DB.modules.filter(m => m.status === "Completed").length;
+        const inProgress = DB.modules.filter(m => m.status === "In Progress").length;
+        const resCount = DB.resources.length;
+        const avgProgress = total ? Math.round(DB.modules.reduce((a, m) => a + m.progress, 0) / total) : 0;
+        const todayIdx = new Date().getDay();
+        const todayKey = DAYS[(todayIdx + 6) % 7];
+        const todayItems = DB.schedule.filter(s => s.day === todayKey).sort((a, b) => a.order - b.order);
+        const todayDone = todayItems.filter(s => s.completed).length;
+        const hour = new Date().getHours();
+        const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+        const firstName = Google.profile ? (Google.profile.given_name || (Google.profile.name || "").split(" ")[0]) : "";
+        const recentModules = [...DB.modules].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0, 4);
+
+        return `
+    <h1 class="page-title">${greeting}${firstName ? ", " + esc(firstName) : ""}</h1>
+    <p class="page-sub">Continue building your study habits.</p>
+
+    <div class="grid-stats">
+      ${statCard("layers", "Modules", total, "blue")}
+      ${statCard("check-circle-2", "Completed", completed, "green")}
+      ${statCard("loader", "In Progress", inProgress, "orange")}
+      ${statCard("library", "Resources", resCount, "purple")}
+    </div>
+
+    <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:14px;" class="dash-grid mb-section">
+      <div class="panel" style="padding:16px;">
+        <div class="flex-between" style="margin-bottom:12px;">
+          <div class="eyebrow">Today — ${DAY_LABEL[todayKey]}</div>
+          ${todayItems.length ? `<span style="font-size:11px;color:var(--text-tertiary);">${todayDone} / ${todayItems.length}</span>` : ""}
+        </div>
+        ${todayItems.length ? `
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            ${todayItems.map(s => {
+          const m = getModule(s.moduleId); if (!m) return "";
+          return `<div style="display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:8px; background:var(--field-bg);">
+                <div class="mono" style="font-size:10.5px; color:var(--text-tertiary); width:36px;">${s.startTime || '--:--'}</div>
+                <div class="sd-icon" style="width:22px;height:22px;border-radius:6px;background:${COLORS[m.color]}22; display:flex;align-items:center;justify-content:center;">${icon(m.icon, `style="width:11px;height:11px;color:${COLORS[m.color]}"`)}</div>
+                <div style="flex:1; font-size:12px; font-weight:600; ${s.completed ? 'text-decoration:line-through;color:var(--text-tertiary);' : ''}">${esc(m.name)}</div>
+                <button class="icon-btn" data-toggle-sched="${s.id}" title="Toggle complete">${icon(s.completed ? 'rotate-ccw' : 'check')}</button>
+              </div>`;
+        }).join("")}
+          </div>
+        ` : `<div style="color:var(--text-tertiary); font-size:12.5px; padding:12px 0;">Nothing scheduled today. <a class="plain" data-nav="schedule" href="javascript:void(0)">Plan your week →</a></div>`}
+      </div>
+
+      <div class="panel" style="padding:16px;">
+        <div class="eyebrow" style="margin-bottom:12px;">Weekly Progress</div>
+        <div style="font-size:28px; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px;">${avgProgress}%</div>
+        <div class="progress-track" style="margin-bottom:12px;"><div class="progress-fill" style="width:${avgProgress}%"></div></div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          ${DB.modules.slice(0, 5).map(m => `
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div style="width:6px;height:6px;border-radius:50%; background:${COLORS[m.color]}; flex-shrink:0;"></div>
+              <div style="font-size:11.5px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-secondary);">${esc(m.name)}</div>
+              <div style="font-size:11px; font-weight:700; color:var(--text-tertiary);">${m.progress}%</div>
+            </div>`).join("")}
+        </div>
+      </div>
+    </div>
+
+    <div class="flex-between" style="margin-bottom:12px;">
+      <div class="eyebrow">Recently updated</div>
+      <span class="btn btn-ghost btn-sm" data-nav="modules">View all ${icon('arrow-right', 'style="width:11px;height:11px"')}</span>
+    </div>
+    <div class="modules-grid">
+      ${recentModules.map(m => moduleCard(m)).join("")}
+    </div>
+  `;
+      }
+
+      function statCard(iconName, label, value, colorKey) {
+        return `<div class="panel stat-card">
+    <div class="icon-wrap" style="background:${COLORS[colorKey]}1f; color:${COLORS[colorKey]}">${icon(iconName)}</div>
+    <div class="num">${value}</div>
+    <div class="lbl">${label}</div>
+  </div>`;
+      }
+
+      /* ---------------- Modules Page ---------------- */
+      function renderModulesPage() {
+        const filters = ["all", "Not Started", "In Progress", "Completed", "Paused"];
+        let mods = DB.modules;
+        if (State.moduleFilter !== "all") mods = mods.filter(m => m.status === State.moduleFilter);
+        return `
+    <div class="flex-between" style="margin-bottom:4px;">
+      <div>
+        <h1 class="page-title">Modules</h1>
+        <p class="page-sub" style="margin-bottom:0;">Your personal learning roadmap.</p>
+      </div>
+      <button class="btn btn-primary" data-open-module-dialog>${icon('plus')} New</button>
+    </div>
+    <div style="display:flex; gap:6px; margin:14px 0 18px; flex-wrap:wrap;">
+      ${filters.map(f => `<button class="btn btn-sm ${State.moduleFilter === f ? 'btn-primary' : 'btn-secondary'}" data-mod-filter="${f}">${f === 'all' ? 'All' : f}</button>`).join("")}
+    </div>
+    ${mods.length ? `<div class="modules-grid">${mods.map(m => moduleCard(m)).join("")}${moduleAddCard()}</div>` :
+            emptyState("layers", "No modules yet.", "Create your first learning module to start building.", "New Module", "data-open-module-dialog")}
+  `;
+      }
+
+      function moduleAddCard() {
+        return `<div class="btn-big-dashed" style="min-height:150px;" data-open-module-dialog>
+    ${icon('plus', 'style="width:20px;height:20px"')}
+    <span style="font-size:12.5px; font-weight:600;">New Module</span>
+  </div>`;
+      }
+
+      function moduleCard(m) {
+        const res = moduleResources(m.id).length;
+        const notes = moduleNotes(m.id).length;
+        const color = COLORS[m.color] || COLORS.blue;
+        const isImportant = (m.priority === "High" || m.priority === "Critical") && m.status !== "Completed";
+        return `
+  <div class="panel module-card ${isImportant ? 'on-fire' : ''}" data-open-module="${m.id}">
+    <div class="glow" style="background:${color}"></div>
+    ${isImportant ? `<div class="fire-badge" title="${m.priority} priority — active focus">${icon('flame')}</div>` : ""}
+    <div class="module-actions">
+      <button class="icon-btn" data-open-module="${m.id}" title="Open">${icon('arrow-up-right')}</button>
+      <button class="icon-btn" data-edit-module="${m.id}" title="Edit">${icon('pencil')}</button>
+      <button class="icon-btn" data-delete-module="${m.id}" title="Delete">${icon('trash-2')}</button>
+    </div>
+    <div class="icon-badge" style="background:${color}22; color:${color};">${icon(m.icon)}</div>
+    <h3>${esc(m.name)}</h3>
+    <p class="desc">${esc(m.description || "No description yet.")}</p>
+    <div style="font-size:10.5px; font-weight:700; color:var(--text-tertiary); margin-bottom:4px;">${m.progress}% Complete</div>
+    <div class="progress-track"><div class="progress-fill" style="width:${m.progress}%; background:linear-gradient(90deg, ${color}, ${color}bb);"></div></div>
+    <div class="meta-row">
+      <span>${res} Resources · ${notes} Notes</span>
+    </div>
+    <div style="margin-top:8px;">
+      <span class="pill" style="background:${statusColor(m.status)}22; color:${statusColor(m.status)};">${m.status}</span>
+    </div>
+  </div>`;
+      }
+
+      function statusColor(status) {
+        return { "Not Started": "#8E8E93", "In Progress": "#0A84FF", "Completed": "#32D74B", "Paused": "#FF9F0A" }[status] || "#8E8E93";
+      }
+      function priorityColor(p) {
+        return { "Low": "#8E8E93", "Medium": "#0A84FF", "High": "#FF9F0A", "Critical": "#FF453A" }[p] || "#8E8E93";
+      }
+      function emptyState(iconName, title, body, btnLabel, btnAttr) {
+        return `<div class="empty-state panel" style="padding:40px 16px;">
+    <div class="icon-circle">${icon(iconName)}</div>
+    <h3>${title}</h3>
+    <p>${body}</p>
+    ${btnLabel ? `<button class="btn btn-primary" ${btnAttr}>${icon('plus')} ${btnLabel}</button>` : ""}
+  </div>`;
+      }
+
+      /* ---------------- Module Detail ---------------- */
+      function renderModuleDetail(id) {
+        const m = getModule(id);
+        if (!m) return emptyState("alert-triangle", "Module not found", "This module may have been deleted.", "Back to Modules", 'data-nav="modules"');
+        const color = COLORS[m.color];
+        const res = moduleResources(m.id);
+        const notes = moduleNotes(m.id);
+        const sched = moduleSchedule(m.id);
+
+        return `
+    <div class="btn btn-ghost btn-sm" data-nav="modules" style="margin-bottom:14px; width:fit-content;">${icon('arrow-left', 'style="width:12px;height:12px"')} Modules</div>
+
+    <div class="panel" style="padding:18px; margin-bottom:18px;">
+      <div style="display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap;">
+        <div class="icon-badge" style="width:48px;height:48px;border-radius:14px; background:${color}22; color:${color};">${icon(m.icon, 'style="width:22px;height:22px"')}</div>
+        <div style="flex:1; min-width:180px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <h1 class="page-title" style="margin-bottom:2px;">${esc(m.name)}</h1>
+            <span class="pill" style="background:${statusColor(m.status)}22; color:${statusColor(m.status)};">${m.status}</span>
+            <span class="pill" style="background:${priorityColor(m.priority)}22; color:${priorityColor(m.priority)};">${m.priority}</span>
+          </div>
+          <p class="page-sub" style="margin-bottom:10px;">${esc(m.description || "No description yet.")}</p>
+          <div style="display:flex; align-items:center; gap:10px; max-width:380px;">
+            <div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:${m.progress}%; background:linear-gradient(90deg, ${color}, ${color}bb);"></div></div>
+            <span style="font-size:12px; font-weight:700; color:var(--text-secondary); width:34px;">${m.progress}%</span>
+          </div>
+          ${res.length
+            ? `<div style="font-size:10.5px; color:var(--text-tertiary); margin-top:6px; display:flex; align-items:center; gap:4px;">${icon('timer', 'style="width:11px;height:11px"')} Tracked automatically as you study the resources below</div>`
+            : `<input type="range" min="0" max="100" step="5" value="${m.progress}" data-progress-slider="${m.id}" style="width:100%; max-width:380px; margin-top:6px; accent-color:${color};">`}
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-secondary btn-sm" data-edit-module="${m.id}">${icon('pencil', 'style="width:12px;height:12px"')}</button>
+          <button class="btn btn-danger btn-sm" data-delete-module="${m.id}">${icon('trash-2', 'style="width:12px;height:12px"')}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn ${State.moduleTab === 'resources' ? 'active' : ''}" data-mod-tab="resources">${icon('library')} Resources <span style="color:var(--text-tertiary); font-weight:400;">(${res.length})</span></button>
+      <button class="tab-btn ${State.moduleTab === 'notes' ? 'active' : ''}" data-mod-tab="notes">${icon('notebook-pen')} Notes <span style="color:var(--text-tertiary); font-weight:400;">(${notes.length})</span></button>
+      <button class="tab-btn ${State.moduleTab === 'schedule' ? 'active' : ''}" data-mod-tab="schedule">${icon('calendar-days')} Schedule <span style="color:var(--text-tertiary); font-weight:400;">(${sched.length})</span></button>
+    </div>
+
+    ${State.moduleTab === 'resources' ? renderModuleResourcesTab(m, res) : ""}
+    ${State.moduleTab === 'notes' ? renderModuleNotesTab(m, notes) : ""}
+    ${State.moduleTab === 'schedule' ? renderModuleScheduleTab(m, sched) : ""}
+  `;
+      }
+
+      function renderModuleResourcesTab(m, res) {
+        return `
+    <div class="flex-between" style="margin-bottom:12px;">
+      <div></div>
+      <button class="btn btn-primary btn-sm" data-open-resource-dialog="${m.id}">${icon('plus', 'style="width:12px;height:12px"')} Add</button>
+    </div>
+    ${res.length ? `<div class="modules-grid">${res.map(r => resourceCard(r, true)).join("")}</div>` :
+            emptyState("library", "No resources yet.", "Attach videos, PDFs, websites or links.", "Add Resource", `data-open-resource-dialog="${m.id}"`)}
+  `;
+      }
+
+      function renderModuleNotesTab(m, notes) {
+        const sorted = [...notes].sort((a, b) => b.pinned - a.pinned || new Date(b.updatedAt) - new Date(a.updatedAt));
+        return `
+    <div class="flex-between" style="margin-bottom:12px;">
+      <div></div>
+      <button class="btn btn-primary btn-sm" data-open-note-dialog="${m.id}">${icon('plus', 'style="width:12px;height:12px"')} New</button>
+    </div>
+    ${sorted.length ? `<div class="modules-grid">${sorted.map(n => noteCard(n)).join("")}</div>` :
+            emptyState("notebook-pen", "No notes yet.", "Capture commands, concepts and cheat sheets.", "New Note", `data-open-note-dialog="${m.id}"`)}
+  `;
+      }
+
+      function renderModuleScheduleTab(m, sched) {
+        const byDay = DAYS.map(d => ({ day: d, items: sched.filter(s => s.day === d).sort((a, b) => a.order - b.order) }));
+        return `
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      ${byDay.filter(d => d.items.length).map(d => `
+        <div class="panel" style="padding:12px 14px;">
+          <div class="eyebrow" style="margin-bottom:6px;">${DAY_LABEL[d.day]}</div>
+          ${d.items.map(s => `
+            <div style="display:flex; align-items:center; gap:8px; padding:4px 0;">
+              <div class="mono" style="font-size:10.5px; color:var(--text-tertiary); width:80px;">${s.startTime || '--:--'} – ${s.endTime || '--:--'}</div>
+              <div style="flex:1; font-size:12px; ${s.completed ? 'text-decoration:line-through;color:var(--text-tertiary);' : ''}">${s.completed ? 'Completed' : 'Scheduled'}</div>
+              <button class="icon-btn" data-toggle-sched="${s.id}">${icon(s.completed ? 'rotate-ccw' : 'check')}</button>
+              <button class="icon-btn" data-delete-sched="${s.id}">${icon('trash-2')}</button>
+            </div>
+          `).join("")}
+        </div>
+      `).join("") || emptyState("calendar-days", "Not scheduled yet.", "Add this module to your weekly schedule.", "Open Schedule", `data-nav="schedule"`)}
+    </div>
+  `;
+      }
+
+      /* ---------------- Resource helpers ---------------- */
+      function ytId(url = "") {
+        const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/);
+        return m ? m[1] : null;
+      }
+      function driveFileId(url = "") {
+        const m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        return (m && url.includes("drive.google.com")) ? m[1] : null;
+      }
+      // Google Drive's normal "/view" share link refuses to render inside an <iframe>
+      // (that's the "Authorization required" screen). The "/preview" endpoint is the
+      // one Google designed for embedding, so we rewrite Drive links to that form.
+      function toEmbeddablePdfUrl(url = "") {
+        const id = driveFileId(url);
+        return id ? `https://drive.google.com/file/d/${id}/preview` : url;
+      }
+      function resourceIconName(type) {
+        return { youtube: "youtube", pdf: "file-text", website: "globe", link: "link" }[type] || "link";
+      }
+      function resourceTypeColor(type) {
+        return { youtube: "#FF453A", pdf: "#0A84FF", website: "#32D74B", link: "#BF5AF2" }[type] || COLORS.blue;
+      }
+
+      function resourceCard(r, showModule) {
+        resourceProgressDefaults(r);
+        const yt = r.type === "youtube" ? ytId(r.url) : null;
+        const thumb = yt ? `https://img.youtube.com/vi/${yt}/mqdefault.jpg` : null;
+        return `
+  <div class="panel resource-card" data-open-resource="${r.id}">
+    <div class="res-thumb">
+      ${thumb ? `<img src="${thumb}" loading="lazy" alt="">` : icon(resourceIconName(r.type), `style="width:18px;height:18px;color:${resourceTypeColor(r.type)}"`)}
+    </div>
+    <div style="flex:1; min-width:0;">
+      <div style="display:flex; align-items:center; gap:4px; margin-bottom:2px;">
+        <span class="pill" style="background:${resourceTypeColor(r.type)}22; color:${resourceTypeColor(r.type)}; font-size:9px;">${r.type}</span>
+        <span class="pill" style="background:${statusColor(r.status)}22; color:${statusColor(r.status)}; font-size:9px;">${r.status}</span>
+      </div>
+      <h4 style="margin:0 0 2px; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(r.title)}</h4>
+      <p style="margin:0; font-size:11px; color:var(--text-secondary); line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${esc(r.description || "")}</p>
+      ${r.progress > 0 ? `<div style="display:flex; align-items:center; gap:6px; margin-top:6px;">
+        <div class="progress-track" style="height:4px; flex:1;"><div class="progress-fill" style="width:${r.progress}%; background:${resourceTypeColor(r.type)};"></div></div>
+        <span style="font-size:9.5px; font-weight:700; color:var(--text-tertiary);">${r.progress}%</span>
+      </div>` : ""}
+    </div>
+    <div style="display:flex; flex-direction:column; gap:3px;">
+      <button class="icon-btn" data-delete-resource="${r.id}" title="Delete">${icon('trash-2')}</button>
+    </div>
+  </div>`;
+      }
+
+      function noteCard(n) {
+        return `
+  <div class="panel note-card" data-open-note="${n.id}">
+    <h4>${n.pinned ? icon('pin', 'class="pin-star" style="width:11px;height:11px"') : ""}${esc(n.title || "Untitled")}</h4>
+    <div class="snippet">${esc((n.content || "").slice(0, 120))}</div>
+    <div style="margin-top:8px; font-size:10px; color:var(--text-tertiary);">${fmtDate(n.updatedAt)}</div>
+  </div>`;
+      }
+
+      /* ---------------- Resources Page ---------------- */
+      function renderResourcesPage() {
+        const types = ["all", "youtube", "pdf", "website", "link"];
+        let items = DB.resources;
+        if (State.resourceFilter !== "all") items = items.filter(r => r.type === State.resourceFilter);
+        return `
+    <h1 class="page-title">Resources</h1>
+    <p class="page-sub">Every video, PDF, website, and link across all modules.</p>
+    <div style="display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;">
+      ${types.map(t => `<button class="btn btn-sm ${State.resourceFilter === t ? 'btn-primary' : 'btn-secondary'}" data-res-filter="${t}">${t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}</button>`).join("")}
+    </div>
+    ${items.length ? `<div class="modules-grid">${items.map(r => {
+          const mod = getModule(r.moduleId);
+          return `<div style="position:relative;">${resourceCard(r, true)}${mod ? `<div style="font-size:10px; color:var(--text-tertiary); margin:-6px 0 0 4px;">in ${esc(mod.name)}</div>` : ""}</div>`;
+        }).join("")}</div>` : emptyState("library", "No resources found.", "Add resources from within a module.", null, "")}
+  `;
+      }
+
+      /* ---------------- Notes Page ---------------- */
+      function renderNotesPage() {
+        const sorted = [...DB.notes].sort((a, b) => b.pinned - a.pinned || new Date(b.updatedAt) - new Date(a.updatedAt));
+        return `
+    <h1 class="page-title">Notes</h1>
+    <p class="page-sub">All study notes across every module.</p>
+    ${sorted.length ? `<div class="modules-grid">${sorted.map(n => {
+          const mod = getModule(n.moduleId);
+          return `<div>${noteCard(n)}${mod ? `<div style="font-size:10px; color:var(--text-tertiary); margin:4px 0 0 4px;">in ${esc(mod.name)}</div>` : ""}</div>`;
+        }).join("")}</div>` : emptyState("notebook-pen", "No notes yet.", "Notes you write inside modules will show up here.", null, "")}
+  `;
+      }
+
+      /* ---------------- Schedule ---------------- */
+      function renderSchedulePage() {
+        const total = DB.schedule.length;
+        const done = DB.schedule.filter(s => s.completed).length;
+        return `
+    <div class="flex-between">
+      <div>
+        <h1 class="page-title">Weekly Schedule</h1>
+        <p class="page-sub" style="margin-bottom:0;">Drag modules onto a day to plan your week.</p>
+      </div>
+      ${total ? `<span style="font-size:11px;color:var(--text-tertiary); white-space:nowrap;">${done} / ${total} done</span>` : ""}
+    </div>
+    <div class="panel pool-panel">
+      <span class="eyebrow" style="width:100%;">Drag a module into a day</span>
+      ${DB.modules.map(m => `
+        <div class="pool-item" draggable="true" data-drag-module="${m.id}">
+          <div class="sd-icon" style="background:${COLORS[m.color]}22; color:${COLORS[m.color]};">${icon(m.icon)}</div>
+          ${esc(m.name)}
+        </div>`).join("")}
+    </div>
+    <div class="week-grid-wrap">
+      <div class="week-grid" style="grid-template-columns:${weekGridTemplate()};">
+        ${DAYS.map(d => renderDayColumn(d)).join("")}
+      </div>
+    </div>
+  `;
+      }
+
+      const DAY_ACCENTS = [COLORS.blue, COLORS.purple, COLORS.green, COLORS.orange, COLORS.pink, COLORS.cyan, COLORS.red];
+
+      function weekGridTemplate() {
+        const todayIdx = new Date().getDay();
+        const todayKey = DAYS[(todayIdx + 6) % 7];
+        const isNarrow = window.matchMedia("(max-width:1000px)").matches;
+        if (isNarrow) {
+          const base = window.matchMedia("(max-width:700px)").matches ? 140 : 170;
+          const big = Math.round(base * 1.3);
+          return DAYS.map(d => `${d === todayKey ? big : base}px`).join(" ");
+        }
+        return DAYS.map(d => d === todayKey ? "1.34fr" : "1fr").join(" ");
+      }
+
+      function renderDayColumn(day) {
+        const items = DB.schedule.filter(s => s.day === day).sort((a, b) => a.order - b.order);
+        const todayIdx = new Date().getDay();
+        const todayKey = DAYS[(todayIdx + 6) % 7];
+        const isToday = day === todayKey;
+        const accent = DAY_ACCENTS[DAYS.indexOf(day)];
+        return `
+  <div class="day-col ${isToday ? 'is-today' : ''}" data-day-col="${day}" style="--day-accent:${accent}66;">
+    <div class="day-col-head">
+      <span class="dname">${isToday ? `<span class="today-dot"></span>` : ""}${DAY_LABEL[day]}</span>
+      <span class="dcount">${items.length}</span>
+    </div>
+    ${items.map(s => scheduleItemHtml(s)).join("")}
+    ${!items.length ? `<div class="day-empty-drop">Drop a module here</div>` : ""}
+  </div>`;
+      }
+
+      function scheduleItemHtml(s) {
+        const m = getModule(s.moduleId);
+        if (!m) return "";
+        const color = COLORS[m.color];
+        const timeLabel = (s.startTime || s.endTime) ? `${s.startTime || '--:--'}${s.endTime ? ' – ' + s.endTime : ''}` : "";
+        return `
+  <div class="sched-item ${s.completed ? 'completed' : ''}" draggable="true" data-sched-item="${s.id}">
+    <div class="sd-row-top">
+      <div class="sd-icon" style="background:${color}22; color:${color};">${icon(m.icon)}</div>
+      <div class="sd-name">${esc(m.name)}</div>
+    </div>
+    <div class="sd-row-bottom">
+      <span class="sd-time">${timeLabel}</span>
+      <div class="sd-actions">
+        <button class="icon-btn" data-toggle-sched="${s.id}" title="Toggle">${icon(s.completed ? 'rotate-ccw' : 'check')}</button>
+        <button class="icon-btn" data-edit-sched="${s.id}" title="Time">${icon('clock')}</button>
+        <button class="icon-btn" data-delete-sched="${s.id}" title="Remove">${icon('x')}</button>
+      </div>
+    </div>
+  </div>`;
+      }
+
+      let dragCtx = null;
+
+      function initScheduleDnD() {
+        const view = document.getElementById("view");
+        view.querySelectorAll("[data-drag-module]").forEach(el => {
+          el.addEventListener("dragstart", e => {
+            dragCtx = { type: "pool", moduleId: el.getAttribute("data-drag-module") };
+            e.dataTransfer.effectAllowed = "copy";
+          });
+        });
+        view.querySelectorAll("[data-sched-item]").forEach(el => {
+          el.addEventListener("dragstart", e => {
+            dragCtx = { type: "item", itemId: el.getAttribute("data-sched-item") };
+            el.classList.add("dragging");
+            e.dataTransfer.effectAllowed = "move";
+          });
+          el.addEventListener("dragend", () => { el.classList.remove("dragging"); });
+        });
+        view.querySelectorAll("[data-day-col]").forEach(col => {
+          col.addEventListener("dragover", e => { e.preventDefault(); col.classList.add("drag-over"); });
+          col.addEventListener("dragleave", () => { col.classList.remove("drag-over"); });
+          col.addEventListener("drop", e => {
+            e.preventDefault();
+            col.classList.remove("drag-over");
+            const day = col.getAttribute("data-day-col");
+            if (!dragCtx) return;
+            if (dragCtx.type === "pool") {
+              const order = DB.schedule.filter(s => s.day === day).length;
+              DB.schedule.push({ id: uid(), moduleId: dragCtx.moduleId, day, startTime: "", endTime: "", order, completed: false });
+              persist(); toast("Added to schedule");
+            } else if (dragCtx.type === "item") {
+              const item = DB.schedule.find(s => s.id === dragCtx.itemId);
+              if (item) {
+                item.day = day;
+                const order = DB.schedule.filter(s => s.day === day && s.id !== item.id).length;
+                item.order = order;
+                persist();
+              }
+            }
+            dragCtx = null;
+            render();
+          });
+        });
+      }
+
+      /* ---------------- Settings ---------------- */
+      function renderGoogleSettingsHTML() {
+        if (!Google.ready) {
+          return `<p style="font-size:12px; color:var(--text-tertiary); margin:0;">Google sign-in isn't configured.</p>`;
+        }
+        if (Google.profile) {
+          return `
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        ${Google.profile.picture ? `<img src="${esc(Google.profile.picture)}" referrerpolicy="no-referrer" style="width:36px;height:36px;border-radius:50%;" onerror="this.style.display='none'">` : ""}
+        <div>
+          <div style="font-weight:600; font-size:13px;">${esc(Google.profile.name || "")}</div>
+          <div style="font-size:11.5px; color:var(--text-tertiary);">${esc(Google.profile.email || "")}</div>
+        </div>
+      </div>
+      <p style="font-size:11.5px; color:var(--text-tertiary); margin:0 0 10px;">Your data auto-syncs to <span class="mono">${esc(GDRIVE_FOLDER_NAME)}/${esc(GDRIVE_DATA_FILE)}</span> in your Drive. ${Google.lastSynced ? "Last synced " + fmtDate(Google.lastSynced) + "." : "Not yet synced."}</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-secondary" id="settings-sync-now">${icon('refresh-cw', 'style="width:13px;height:13px"')} Sync now</button>
+        <button class="btn btn-danger" id="settings-google-signout">${icon('log-out', 'style="width:13px;height:13px"')} Sign out</button>
+      </div>
+    `;
+        }
+        return ""; // Not reachable since sign-in is mandatory, kept for fallback
+      }
+
+      function renderSettingsPage() {
+        const s = DB.settings;
+        return `
+    <h1 class="page-title">Settings</h1>
+    <p class="page-sub">Customize how StudyEasy looks.</p>
+
+    <div class="panel" style="padding:16px;" class="mb-section">
+      <div class="eyebrow" style="margin-bottom:12px;">Appearance</div>
+      <div class="seg-control" style="max-width:300px;">
+        <button data-theme-opt="light" class="${s.theme === 'light' ? 'active' : ''}">${icon('sun', 'style="width:12px;height:12px;margin-right:3px"')}Light</button>
+        <button data-theme-opt="dark" class="${s.theme === 'dark' ? 'active' : ''}">${icon('moon', 'style="width:12px;height:12px;margin-right:3px"')}Dark</button>
+        <button data-theme-opt="system" class="${s.theme === 'system' ? 'active' : ''}">${icon('monitor', 'style="width:12px;height:12px;margin-right:3px"')}System</button>
+      </div>
+    </div>
+
+    <div class="hairline"></div>
+
+    <div class="panel" style="padding:16px;">
+      <div class="eyebrow" style="margin-bottom:12px;">Google Account</div>
+      ${renderGoogleSettingsHTML()}
+    </div>
+  `;
+      }
+
+      /* ---------------- Modals ---------------- */
+      function openModal(html, opts = {}) {
+        const root = document.getElementById("modal-root");
+        root.innerHTML = `<div class="modal-overlay" id="modal-overlay">${html}</div>`;
+        renderIcons(root);
+        root.querySelector("#modal-overlay").addEventListener("mousedown", e => {
+          if (e.target.id === "modal-overlay") closeModal();
+        });
+        document.querySelectorAll("[data-close-modal]").forEach(el => el.addEventListener("click", closeModal));
+      }
+      function closeModal() { document.getElementById("modal-root").innerHTML = ""; }
+
+      function confirmDialog(title, body, onConfirm) {
+        openModal(`
+    <div class="modal-window confirm-box">
+      <div class="modal-header"><h2>${esc(title)}</h2><button class="close-x" data-close-modal>${icon('x')}</button></div>
+      <div class="modal-body"><p style="margin:0; font-size:13px; color:var(--text-secondary); line-height:1.5;">${body}</p></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button class="btn btn-danger" id="confirm-yes">Delete</button>
+      </div>
+    </div>
+  `);
+        document.getElementById("confirm-yes").addEventListener("click", () => { onConfirm(); closeModal(); });
+      }
+
+      function openModuleDialog(existingId) {
+        const m = existingId ? getModule(existingId) : null;
+        const isEdit = !!m;
+        const draft = m ? { ...m } : { name: "", description: "", icon: "terminal", color: "blue", status: "Not Started", priority: "Medium" };
+        openModal(`
+    <div class="modal-window">
+      <div class="modal-header"><h2>${isEdit ? "Edit Module" : "New Module"}</h2><button class="close-x" data-close-modal>${icon('x')}</button></div>
+      <div class="modal-body">
+        <div class="form-row">
+          <label class="field-label">Module Name</label>
+          <input class="field" id="f-name" placeholder="e.g. Linux Fundamentals" value="${esc(draft.name)}">
+          <div id="f-name-err" style="color:var(--danger); font-size:11px; margin-top:3px; display:none;">Name is required.</div>
+        </div>
+        <div class="form-row">
+          <label class="field-label">Description</label>
+          <textarea class="field" id="f-desc" placeholder="Optional description">${esc(draft.description || "")}</textarea>
+        </div>
+        <div class="form-row">
+          <label class="field-label">Icon</label>
+          <div class="icon-picker" id="f-icon-picker">
+            ${ICONS.map(ic => `<button type="button" class="icon-pick-btn ${draft.icon === ic ? 'selected' : ''}" data-icon-choice="${ic}">${icon(ic)}</button>`).join("")}
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="field-label">Color</label>
+          <div class="color-swatches" id="f-color-swatches">
+            ${Object.entries(COLORS).map(([k, v]) => `<div class="swatch ${draft.color === k ? 'selected' : ''}" style="background:${v};" data-color-choice="${k}"></div>`).join("")}
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-row">
+            <label class="field-label">Status</label>
+            <select class="field" id="f-status">
+              ${STATUS_OPTS.map(s => `<option value="${s}" ${draft.status === s ? 'selected' : ''}>${s}</option>`).join("")}
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="field-label">Priority</label>
+            <select class="field" id="f-priority">
+              ${PRIORITY_OPTS.map(p => `<option value="${p}" ${draft.priority === p ? 'selected' : ''}>${p}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button class="btn btn-primary" id="save-module-btn">${isEdit ? 'Save Changes' : 'Create Module'}</button>
+      </div>
+    </div>
+  `);
+        let chosenIcon = draft.icon, chosenColor = draft.color;
+        document.querySelectorAll("[data-icon-choice]").forEach(b => b.addEventListener("click", () => {
+          chosenIcon = b.getAttribute("data-icon-choice");
+          document.querySelectorAll("[data-icon-choice]").forEach(x => x.classList.remove("selected"));
+          b.classList.add("selected");
+        }));
+        document.querySelectorAll("[data-color-choice]").forEach(b => b.addEventListener("click", () => {
+          chosenColor = b.getAttribute("data-color-choice");
+          document.querySelectorAll("[data-color-choice]").forEach(x => x.classList.remove("selected"));
+          b.classList.add("selected");
+        }));
+        document.getElementById("save-module-btn").addEventListener("click", () => {
+          const name = document.getElementById("f-name").value.trim();
+          if (!name) { document.getElementById("f-name-err").style.display = "block"; return; }
+          const description = document.getElementById("f-desc").value.trim();
+          const status = document.getElementById("f-status").value;
+          const priority = document.getElementById("f-priority").value;
+          if (isEdit) {
+            Object.assign(m, { name, description, icon: chosenIcon, color: chosenColor, status, priority, updatedAt: now() });
+            if (status === "Completed") m.progress = 100;
+            toast("Module updated");
+          } else {
+            DB.modules.push({
+              id: uid(), name, description, icon: chosenIcon, color: chosenColor, status, priority,
+              progress: status === "Completed" ? 100 : 0, createdAt: now(), updatedAt: now()
+            });
+            toast("Module created");
+          }
+          persist();
+          closeModal();
+          render();
+        });
+      }
+
+      function deleteModule(id) {
+        const m = getModule(id);
+        if (!m) return;
+        confirmDialog(`Delete ${esc(m.name)}?`, `This will also remove its resources, notes and schedule items. This cannot be undone.`, () => {
+          DB.modules = DB.modules.filter(x => x.id !== id);
+          DB.resources = DB.resources.filter(r => r.moduleId !== id);
+          DB.notes = DB.notes.filter(n => n.moduleId !== id);
+          DB.schedule = DB.schedule.filter(s => s.moduleId !== id);
+          persist();
+          toast("Module deleted");
+          if (State.route === "module" && State.moduleId === id) navigate("modules");
+          else render();
+        });
+      }
+
+      function openResourceDialog(moduleId, existingId) {
+        const r = existingId ? DB.resources.find(x => x.id === existingId) : null;
+        const isEdit = !!r;
+        const draft = r ? { ...r } : { type: "youtube", title: "", url: "", description: "", tags: "" };
+        let chosenType = draft.type;
+        const body = () => `
+    <div class="form-row">
+      <label class="field-label">Type</label>
+      <div class="seg-control">
+        ${RESOURCE_TYPES.map(t => `<button type="button" data-res-type-choice="${t.key}" class="${chosenType === t.key ? 'active' : ''}">${t.label}</button>`).join("")}
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="field-label">${chosenType === 'youtube' ? 'YouTube URL' : chosenType === 'pdf' ? 'PDF URL' : chosenType === 'website' ? 'Website URL' : 'URL'}</label>
+      <input class="field" id="f-url" placeholder="https://…" value="${esc(draft.url)}">
+      <div id="f-url-err" style="color:var(--danger); font-size:11px; margin-top:3px; display:none;">A valid URL is required.</div>
+    </div>
+    ${chosenType === 'pdf' ? `
+    <div class="form-row">
+      <label class="field-label">Or upload a PDF</label>
+      ${Google.signedIn ? `
+        <input type="file" id="f-pdf-upload" accept="application/pdf" style="display:none;">
+        <button type="button" class="btn btn-secondary" id="f-pdf-upload-btn" style="width:100%; justify-content:center;">${icon('upload', 'style="width:13px;height:13px"')} Upload PDF from device</button>
+        <div id="f-pdf-upload-status" style="font-size:11px; color:var(--text-tertiary); margin-top:4px;"></div>
+      ` : `<div style="font-size:12px; color:var(--text-tertiary); background:var(--field-bg); border:1px solid var(--field-border); border-radius:8px; padding:8px 10px;">Sign in with Google to upload PDFs.</div>`}
+    </div>
+    ` : ''}
+    <div class="form-row">
+      <label class="field-label">Title</label>
+      <input class="field" id="f-title" placeholder="Resource title" value="${esc(draft.title)}">
+    </div>
+    <div class="form-row">
+      <label class="field-label">Description</label>
+      <textarea class="field" id="f-rdesc" placeholder="Optional description">${esc(draft.description || "")}</textarea>
+    </div>
+    <div class="form-row" style="margin-bottom:0;">
+      <label class="field-label">Tags (comma separated)</label>
+      <input class="field" id="f-tags" placeholder="e.g. basics, cheatsheet" value="${esc(Array.isArray(draft.tags) ? draft.tags.join(', ') : (draft.tags || ''))}">
+    </div>
+  `;
+        openModal(`
+    <div class="modal-window">
+      <div class="modal-header"><h2>${isEdit ? 'Edit Resource' : 'Add Resource'}</h2><button class="close-x" data-close-modal>${icon('x')}</button></div>
+      <div class="modal-body" id="res-modal-body">${body()}</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button class="btn btn-primary" id="save-resource-btn">${isEdit ? 'Save Changes' : 'Add Resource'}</button>
+      </div>
+    </div>
+  `);
+        function rebind() {
+          document.querySelectorAll("[data-res-type-choice]").forEach(b => b.addEventListener("click", () => {
+            chosenType = b.getAttribute("data-res-type-choice");
+            document.getElementById("res-modal-body").innerHTML = body();
+            renderIcons(document.getElementById("res-modal-body"));
+            rebind();
+          }));
+          const uploadBtn = document.getElementById("f-pdf-upload-btn");
+          const uploadInput = document.getElementById("f-pdf-upload");
+          if (uploadBtn && uploadInput) {
+            uploadBtn.addEventListener("click", () => uploadInput.click());
+            uploadInput.addEventListener("change", async () => {
+              const file = uploadInput.files[0];
+              if (!file) return;
+              const statusEl = document.getElementById("f-pdf-upload-status");
+              if (statusEl) statusEl.textContent = "Uploading to Google Drive…";
+              uploadBtn.disabled = true;
+              try {
+                const uploaded = await uploadFileToDrive(file);
+                const link = uploaded.webViewLink || `https://drive.google.com/file/d/${uploaded.id}/view`;
+                const urlField = document.getElementById("f-url");
+                if (urlField) urlField.value = link;
+                const titleEl = document.getElementById("f-title");
+                if (titleEl && !titleEl.value.trim()) titleEl.value = file.name.replace(/\.pdf$/i, "");
+                if (statusEl) statusEl.textContent = "Uploaded ✓ " + file.name;
+                toast("PDF uploaded to Google Drive");
+              } catch (e) {
+                console.error(e);
+                if (statusEl) statusEl.textContent = "Upload failed — try again.";
+                toast("PDF upload failed", "error");
+              } finally {
+                uploadBtn.disabled = false;
+              }
+            });
+          }
+        }
+        rebind();
+        document.getElementById("save-resource-btn").addEventListener("click", () => {
+          const url = document.getElementById("f-url").value.trim();
+          if (!url || !/^https?:\/\/.+/i.test(url)) { document.getElementById("f-url-err").style.display = "block"; return; }
+          let title = document.getElementById("f-title").value.trim();
+          if (!title) title = chosenType === "youtube" && ytId(url) ? "YouTube Video" : url.replace(/^https?:\/\//, '').split('/')[0];
+          const description = document.getElementById("f-rdesc").value.trim();
+          const tags = document.getElementById("f-tags").value.split(",").map(t => t.trim()).filter(Boolean);
+          if (isEdit) {
+            Object.assign(r, { type: chosenType, url, title, description, tags });
+            toast("Resource updated");
+          } else {
+            DB.resources.push({ id: uid(), moduleId, type: chosenType, url, title, description, thumbnail: "", tags, createdAt: now(), progress: 0, status: "Not Started", timeSpent: 0 });
+            toast("Resource added");
+          }
+          autoSyncModuleProgress(moduleId);
+          persist();
+          closeModal();
+          render();
+        });
+      }
+
+      function deleteResource(id) {
+        const r = DB.resources.find(x => x.id === id);
+        if (!r) return;
+        confirmDialog(`Delete "${esc(r.title)}"?`, `This resource will be permanently removed.`, () => {
+          const moduleId = r.moduleId;
+          DB.resources = DB.resources.filter(x => x.id !== id);
+          autoSyncModuleProgress(moduleId);
+          persist();
+          toast("Resource deleted");
+          render();
+        });
+      }
+
+      function openNoteDialog(moduleId, existingId) {
+        const n = existingId ? DB.notes.find(x => x.id === existingId) : null;
+        const isEdit = !!n;
+        const draft = n ? { ...n } : { title: "", content: "", pinned: false };
+        openModal(`
+    <div class="modal-window wide">
+      <div class="modal-header"><h2>${isEdit ? 'Edit Note' : 'New Note'}</h2><button class="close-x" data-close-modal>${icon('x')}</button></div>
+      <div class="modal-body">
+        <div class="form-row">
+          <input class="field" id="f-note-title" placeholder="Note title" value="${esc(draft.title)}" style="font-weight:700; font-size:14px;">
+        </div>
+        <div class="form-row" style="margin-bottom:6px;">
+          <textarea class="field mono" id="f-note-content" placeholder="Write your notes… (markdown-style # headings supported)" style="min-height:180px; font-size:12.5px; line-height:1.6;">${esc(draft.content)}</textarea>
+        </div>
+        <label class="checkbox-wrap" style="font-size:12px; color:var(--text-secondary);">
+          <input type="checkbox" id="f-note-pinned" ${draft.pinned ? 'checked' : ''}> Pin this note
+        </label>
+      </div>
+      <div class="modal-footer">
+        ${isEdit ? `<button class="btn btn-danger" id="delete-note-btn" style="margin-right:auto;">${icon('trash-2', 'style="width:12px;height:12px"')} Delete</button>` : ""}
+        <button class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button class="btn btn-primary" id="save-note-btn">${isEdit ? 'Save' : 'Create Note'}</button>
+      </div>
+    </div>
+  `);
+        if (isEdit) {
+          document.getElementById("delete-note-btn").addEventListener("click", () => {
+            closeModal();
+            confirmDialog(`Delete "${esc(n.title || 'Untitled')}"?`, `This note will be permanently removed.`, () => {
+              DB.notes = DB.notes.filter(x => x.id !== n.id);
+              persist(); toast("Note deleted"); render();
+            });
+          });
+        }
+        document.getElementById("save-note-btn").addEventListener("click", () => {
+          const title = document.getElementById("f-note-title").value.trim() || "Untitled";
+          const content = document.getElementById("f-note-content").value;
+          const pinned = document.getElementById("f-note-pinned").checked;
+          if (isEdit) {
+            Object.assign(n, { title, content, pinned, updatedAt: now() });
+            toast("Note saved");
+          } else {
+            DB.notes.push({ id: uid(), moduleId, title, content, pinned, createdAt: now(), updatedAt: now() });
+            toast("Note created");
+          }
+          persist();
+          closeModal();
+          render();
+        });
+      }
+
+      function openScheduleTimeDialog(id) {
+        const s = DB.schedule.find(x => x.id === id);
+        if (!s) return;
+        openModal(`
+    <div class="modal-window">
+      <div class="modal-header"><h2>Edit Time</h2><button class="close-x" data-close-modal>${icon('x')}</button></div>
+      <div class="modal-body">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-row"><label class="field-label">Start</label><input type="time" class="field" id="f-start" value="${s.startTime || ''}"></div>
+          <div class="form-row"><label class="field-label">End</label><input type="time" class="field" id="f-end" value="${s.endTime || ''}"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button class="btn btn-primary" id="save-time-btn">Save</button>
+      </div>
+    </div>
+  `);
+        document.getElementById("save-time-btn").addEventListener("click", () => {
+          s.startTime = document.getElementById("f-start").value;
+          s.endTime = document.getElementById("f-end").value;
+          persist(); closeModal(); render(); toast("Time updated");
+        });
+      }
+
+      /* ---------------- Resource Viewer ---------------- */
+      function openResourceViewer(id) {
+        const r = DB.resources.find(x => x.id === id);
+        if (!r) return;
+        resourceProgressDefaults(r);
+        const root = document.getElementById("viewer-root");
+        let bodyHtml = "";
+        if (r.type === "youtube") {
+          const vid = ytId(r.url);
+          bodyHtml = vid
+            ? `<iframe src="https://www.youtube.com/embed/${vid}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
+            : `<div class="viewer-fallback"><p>Couldn't detect a YouTube video ID.</p><a class="btn btn-primary" href="${esc(r.url)}" target="_blank" rel="noopener">Open externally</a></div>`;
+        } else if (r.type === "pdf") {
+          const isDrive = !!driveFileId(r.url);
+          bodyHtml = `<iframe src="${esc(toEmbeddablePdfUrl(r.url))}" title="PDF viewer"></iframe>` +
+            (isDrive ? `
+      <div style="position:absolute; left:10px; right:10px; bottom:10px; display:flex; justify-content:center;">
+        <div style="background:var(--panel-bg-solid); border:1px solid var(--panel-border); border-radius:10px; padding:6px 10px; font-size:11px; color:var(--text-tertiary); display:flex; align-items:center; gap:8px;">
+          <span>Blank or asking to sign in? The Drive file needs "Anyone with the link → Viewer" sharing.</span>
+          <a class="btn btn-secondary btn-sm" href="${esc(r.url)}" target="_blank" rel="noopener" style="white-space:nowrap;">Open in Drive</a>
+        </div>
+      </div>` : "");
+        } else {
+          // Most websites (w3schools, most blogs, docs, news sites, etc.) send
+          // X-Frame-Options / CSP frame-ancestors headers that block embedding.
+          // The browser does NOT fire the iframe's onerror event for that case —
+          // it just silently shows a blank/refused page inside the frame, which is
+          // the "won't allow connection" error you were seeing. There's no reliable
+          // way to detect that from JS, so for generic links we skip the iframe
+          // entirely and open the real site in its own tab instead — that always works.
+          let host = "";
+          try { host = new URL(r.url).hostname.replace(/^www\./, ""); } catch (e) { host = r.url; }
+          bodyHtml = `
+      <div class="viewer-fallback" style="position:relative;">
+        <div class="viewer-fallback-icon">${icon('globe')}</div>
+        <p class="viewer-fallback-title">${esc(r.title)}</p>
+        <p class="viewer-fallback-host">${esc(host)}</p>
+        <p class="viewer-fallback-note">Most websites block being shown inside another app, so this opens in your browser instead.</p>
+        <a class="btn btn-primary" id="open-link-external-${r.id}" href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${icon('external-link')} Open website</a>
+      </div>`;
+        }
+        root.innerHTML = `
+    <div class="viewer-overlay">
+      <div class="viewer-window">
+        <div class="viewer-head">
+          <button class="close-x" id="viewer-back">${icon('arrow-left')}</button>
+          <div class="vt">${esc(r.title)}</div>
+          <div id="viewer-progress-wrap" style="display:flex; align-items:center; gap:6px; margin:0 4px;">
+            <div class="progress-track" style="width:70px; height:4px;"><div id="viewer-progress-fill" class="progress-fill" style="width:${r.progress}%;"></div></div>
+            <span id="viewer-progress-pct" style="font-size:10.5px; font-weight:700; color:var(--text-tertiary); width:30px;">${r.progress}%</span>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="${esc(r.url)}" target="_blank" rel="noopener">${icon('external-link', 'style="width:12px;height:12px"')}</a>
+          <button class="close-x" id="viewer-close">${icon('x')}</button>
+        </div>
+        <div class="viewer-body" style="position:relative;">${bodyHtml}</div>
+      </div>
+    </div>
+  `;
+        renderIcons(root);
+
+        // ---- Automatic time-based progress tracking ----
+        const target = RESOURCE_TARGETS[r.type] || 300;
+        const fillEl = document.getElementById("viewer-progress-fill");
+        const pctEl = document.getElementById("viewer-progress-pct");
+        const tick = setInterval(() => {
+          if (document.hidden) return; // only count time while actually looking at it
+          r.timeSpent += 1;
+          const pct = Math.min(100, Math.round((r.timeSpent / target) * 100));
+          if (pct !== r.progress) {
+            const wasComplete = r.progress >= 100;
+            r.progress = pct;
+            r.status = pct >= 100 ? "Completed" : (pct > 0 ? "In Progress" : "Not Started");
+            if (pct >= 100 && !wasComplete) toast(`"${r.title}" marked as completed 🎉`, "success");
+            if (fillEl) fillEl.style.width = pct + "%";
+            if (pctEl) pctEl.textContent = pct + "%";
+          }
+          if (r.timeSpent % 5 === 0) { autoSyncModuleProgress(r.moduleId); persist(); }
+        }, 1000);
+
+        const close = () => {
+          clearInterval(tick);
+          autoSyncModuleProgress(r.moduleId);
+          persist();
+          root.innerHTML = "";
+          render(); // refresh resource/module cards behind the viewer with the latest %
+        };
+        document.getElementById("viewer-close").addEventListener("click", close);
+        document.getElementById("viewer-back").addEventListener("click", close);
+      }
+
+      /* ---------------- Command Palette ---------------- */
+      const COMMANDS = [
+        { label: "Create Module", icon: "plus", action: () => { navigate("modules"); setTimeout(() => openModuleDialog(), 0); } },
+        { label: "Open Schedule", icon: "calendar-days", action: () => navigate("schedule") },
+        { label: "Create Note", icon: "notebook-pen", action: () => { if (DB.modules[0]) openNoteDialog(DB.modules[0].id); else toast("Create a module first", "error"); } },
+        { label: "Toggle Dark Mode", icon: "moon", action: () => setTheme(DB.settings.theme === 'dark' ? 'light' : 'dark') },
+        { label: "Open Settings", icon: "settings", action: () => navigate("settings") },
+        { label: "Open Dashboard", icon: "layout-dashboard", action: () => navigate("dashboard") },
+      ];
+
+      function openCommandPalette() {
+        const root = document.getElementById("cmdk-root");
+        root.innerHTML = `
+    <div class="cmdk-overlay" id="cmdk-overlay">
+      <div class="cmdk-box">
+        <div class="cmdk-input-row">${icon('search')}<input id="cmdk-input" placeholder="Search modules, resources, notes… or run a command" autocomplete="off"></div>
+        <div class="cmdk-results" id="cmdk-results"></div>
+      </div>
+    </div>`;
+        renderIcons(root);
+        const overlay = document.getElementById("cmdk-overlay");
+        overlay.addEventListener("mousedown", e => { if (e.target.id === "cmdk-overlay") closeCommandPalette(); });
+        const input = document.getElementById("cmdk-input");
+        input.focus();
+        input.addEventListener("input", () => cmdkSearch(input.value));
+        input.addEventListener("keydown", cmdkKeyNav);
+        cmdkSearch("");
+      }
+      function closeCommandPalette() { document.getElementById("cmdk-root").innerHTML = ""; }
+
+      function cmdkSearch(q) {
+        const results = document.getElementById("cmdk-results");
+        const query = q.trim().toLowerCase();
+        let html = "";
+        const cmds = query ? COMMANDS.filter(c => c.label.toLowerCase().includes(query)) : COMMANDS;
+        const mods = query ? DB.modules.filter(m => m.name.toLowerCase().includes(query)) : [];
+        const res = query ? DB.resources.filter(r => r.title.toLowerCase().includes(query)).slice(0, 6) : [];
+        const notes = query ? DB.notes.filter(n => (n.title || "").toLowerCase().includes(query) || (n.content || "").toLowerCase().includes(query)).slice(0, 6) : [];
+        if (cmds.length) {
+          html += `<div class="cmdk-group-label">Commands</div>`;
+          html += cmds.map((c, i) => `<div class="cmdk-item" data-cmdk-cmd="${i}">${icon(c.icon)}<span>${c.label}</span></div>`).join("");
+        }
+        if (mods.length) {
+          html += `<div class="cmdk-group-label">Modules</div>`;
+          html += mods.map(m => `<div class="cmdk-item" data-cmdk-module="${m.id}">${icon(m.icon)}<span>${esc(m.name)}</span><span class="cmdk-sub">${m.status}</span></div>`).join("");
+        }
+        if (res.length) {
+          html += `<div class="cmdk-group-label">Resources</div>`;
+          html += res.map(r => `<div class="cmdk-item" data-cmdk-resource="${r.id}">${icon(resourceIconName(r.type))}<span>${esc(r.title)}</span></div>`).join("");
+        }
+        if (notes.length) {
+          html += `<div class="cmdk-group-label">Notes</div>`;
+          html += notes.map(n => `<div class="cmdk-item" data-cmdk-note="${n.id}">${icon('notebook-pen')}<span>${esc(n.title || 'Untitled')}</span></div>`).join("");
+        }
+        if (!html) {
+          html = `<div style="padding:24px; text-align:center; color:var(--text-tertiary); font-size:12.5px;">No results found.</div>`;
+        }
+        results.innerHTML = html;
+        renderIcons(results);
+        results.querySelectorAll("[data-cmdk-cmd]").forEach(el => el.addEventListener("click", () => {
+          const c = cmds[+el.getAttribute("data-cmdk-cmd")];
+          closeCommandPalette(); c.action();
+        }));
+        results.querySelectorAll("[data-cmdk-module]").forEach(el => el.addEventListener("click", () => {
+          closeCommandPalette(); navigate("module", { moduleId: el.getAttribute("data-cmdk-module"), moduleTab: "resources" });
+        }));
+        results.querySelectorAll("[data-cmdk-resource]").forEach(el => el.addEventListener("click", () => {
+          closeCommandPalette(); openResourceViewer(el.getAttribute("data-cmdk-resource"));
+        }));
+        results.querySelectorAll("[data-cmdk-note]").forEach(el => el.addEventListener("click", () => {
+          const n = DB.notes.find(x => x.id === el.getAttribute("data-cmdk-note"));
+          closeCommandPalette(); if (n) openNoteDialog(n.moduleId, n.id);
+        }));
+      }
+      function cmdkKeyNav(e) { if (e.key === "Escape") closeCommandPalette(); }
+
+      /* ---------------- Theme ---------------- */
+      function setTheme(mode) {
+        if (!DB) return;
+        DB.settings.theme = mode;
+        saveSettings(DB.settings);
+        applyTheme();
+        render();
+      }
+      function applyTheme() {
+        let effective = "dark";
+        if (DB && DB.settings) {
+          effective = DB.settings.theme;
+        }
+        if (effective === "system") {
+          effective = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.body.setAttribute("data-theme", effective);
+      }
+
+      /* ---------------- Event Delegation ---------------- */
+      function attachViewHandlers() {
+        const view = document.getElementById("view");
+        view.querySelectorAll("[data-nav]").forEach(el => el.addEventListener("click", () => navigate(el.getAttribute("data-nav"))));
+        view.querySelectorAll("[data-open-module]").forEach(el => el.addEventListener("click", (e) => {
+          if (e.target.closest("[data-edit-module],[data-delete-module]")) return;
+          navigate("module", { moduleId: el.getAttribute("data-open-module"), moduleTab: "resources" });
+        }));
+        view.querySelectorAll("[data-edit-module]").forEach(el => el.addEventListener("click", (e) => { e.stopPropagation(); openModuleDialog(el.getAttribute("data-edit-module")); }));
+        view.querySelectorAll("[data-delete-module]").forEach(el => el.addEventListener("click", (e) => { e.stopPropagation(); deleteModule(el.getAttribute("data-delete-module")); }));
+        view.querySelectorAll("[data-open-module-dialog]").forEach(el => el.addEventListener("click", () => openModuleDialog()));
+        view.querySelectorAll("[data-mod-filter]").forEach(el => el.addEventListener("click", () => { State.moduleFilter = el.getAttribute("data-mod-filter"); render(); }));
+        view.querySelectorAll("[data-mod-tab]").forEach(el => el.addEventListener("click", () => { State.moduleTab = el.getAttribute("data-mod-tab"); render(); }));
+        view.querySelectorAll("[data-open-resource-dialog]").forEach(el => el.addEventListener("click", () => openResourceDialog(el.getAttribute("data-open-resource-dialog"))));
+        view.querySelectorAll("[data-open-resource]").forEach(el => el.addEventListener("click", (e) => {
+          if (e.target.closest("[data-delete-resource]")) return;
+          openResourceViewer(el.getAttribute("data-open-resource"));
+        }));
+        view.querySelectorAll("[data-delete-resource]").forEach(el => el.addEventListener("click", (e) => { e.stopPropagation(); deleteResource(el.getAttribute("data-delete-resource")); }));
+        view.querySelectorAll("[data-res-filter]").forEach(el => el.addEventListener("click", () => { State.resourceFilter = el.getAttribute("data-res-filter"); render(); }));
+        view.querySelectorAll("[data-open-note-dialog]").forEach(el => el.addEventListener("click", () => openNoteDialog(el.getAttribute("data-open-note-dialog"))));
+        view.querySelectorAll("[data-open-note]").forEach(el => el.addEventListener("click", () => {
+          const n = DB.notes.find(x => x.id === el.getAttribute("data-open-note"));
+          if (n) openNoteDialog(n.moduleId, n.id);
+        }));
+        view.querySelectorAll("[data-progress-slider]").forEach(el => {
+          el.addEventListener("input", () => {
+            setProgress(el.getAttribute("data-progress-slider"), +el.value);
+            render();
+          });
+        });
+        view.querySelectorAll("[data-toggle-sched]").forEach(el => el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const s = DB.schedule.find(x => x.id === el.getAttribute("data-toggle-sched"));
+          if (s) { s.completed = !s.completed; persist(); render(); }
+        }));
+        view.querySelectorAll("[data-delete-sched]").forEach(el => el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          DB.schedule = DB.schedule.filter(x => x.id !== el.getAttribute("data-delete-sched"));
+          persist(); render(); toast("Removed from schedule");
+        }));
+        view.querySelectorAll("[data-edit-sched]").forEach(el => el.addEventListener("click", (e) => {
+          e.stopPropagation(); openScheduleTimeDialog(el.getAttribute("data-edit-sched"));
+        }));
+        view.querySelectorAll("[data-theme-opt]").forEach(el => el.addEventListener("click", () => setTheme(el.getAttribute("data-theme-opt"))));
+
+        const settingsSyncBtn = document.getElementById("settings-sync-now");
+        if (settingsSyncBtn) settingsSyncBtn.addEventListener("click", async () => {
+          toast("Syncing with Google Drive…");
+          try { await ensureDriveFile(); toast("Synced"); }
+          catch (e) { console.error(e); toast("Sync failed", "error"); }
+          render();
+        });
+        const settingsSignoutBtn = document.getElementById("settings-google-signout");
+        if (settingsSignoutBtn) settingsSignoutBtn.addEventListener("click", googleSignOut);
+      }
+
+      document.addEventListener("click", (e) => {
+        const navEl = e.target.closest("[data-nav]");
+        if (navEl && (navEl.closest("#sidebar") || navEl.closest("#mobile-nav"))) {
+          navigate(navEl.getAttribute("data-nav"));
+        }
+        const themeEl = e.target.closest("[data-theme-opt]");
+        if (themeEl && themeEl.closest("#sidebar")) {
+          setTheme(themeEl.getAttribute("data-theme-opt"));
+        }
+        if (e.target.closest("#search-trigger-btn")) { openCommandPalette(); }
+        const gaMenu = document.getElementById("ga-menu");
+        if (gaMenu && gaMenu.classList.contains("open") && !e.target.closest("#google-account")) {
+          gaMenu.classList.remove("open");
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        const isCmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k";
+        if (isCmdK) { e.preventDefault(); openCommandPalette(); return; }
+        if (e.key === "Escape") {
+          if (document.getElementById("cmdk-root").innerHTML) closeCommandPalette();
+          else if (document.getElementById("viewer-root").innerHTML) document.getElementById("viewer-root").innerHTML = "";
+          else if (document.getElementById("modal-root").innerHTML) closeModal();
+        }
+      });
+
+      window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+        if (DB && DB.settings && DB.settings.theme === "system") applyTheme();
+      });
+
+      window.addEventListener("resize", debounce(() => {
+        if (State.route === "schedule") render();
+      }, 200));
+
+      /* ---------------- Boot ---------------- */
+      applyTheme();
+      initGoogle();
+
+    })();
+  </script>
+</body>
+
+</html>
