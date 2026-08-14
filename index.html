@@ -474,8 +474,15 @@
     }
 
     @keyframes ga-pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: .35; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .35;
+      }
     }
 
     @media (max-width: 480px) {
@@ -870,9 +877,16 @@
       opacity: 1;
     }
 
+    /* On touch devices, always show module actions */
+    @media (hover: none) {
+      .module-actions {
+        opacity: 1;
+      }
+    }
+
     .icon-btn {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       border-radius: 7px;
       border: 1px solid var(--panel-border);
       background: var(--panel-bg-solid);
@@ -881,6 +895,8 @@
       justify-content: center;
       cursor: pointer;
       color: var(--text-secondary);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     .icon-btn:hover {
@@ -889,8 +905,15 @@
     }
 
     .icon-btn svg {
-      width: 12px;
-      height: 12px;
+      width: 13px;
+      height: 13px;
+    }
+
+    @media (max-width: 860px) {
+      .icon-btn {
+        width: 32px;
+        height: 32px;
+      }
     }
 
     .modules-grid {
@@ -1015,6 +1038,20 @@
       cursor: pointer;
       transition: all .15s var(--ease);
       white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    @media (max-width: 860px) {
+      .btn {
+        min-height: 40px;
+        padding: 8px 14px;
+      }
+
+      .btn-sm {
+        min-height: 34px;
+        padding: 6px 12px;
+      }
     }
 
     .btn svg {
@@ -1098,10 +1135,10 @@
 
     /* ---------- Forms ---------- */
     .field-label {
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--text-secondary);
-      margin-bottom: 4px;
+      margin-bottom: 5px;
       display: block;
     }
 
@@ -1109,12 +1146,14 @@
       width: 100%;
       background: var(--field-bg);
       border: 1px solid var(--field-border);
-      border-radius: 9px;
-      padding: 8px 11px;
-      font-size: 13px;
+      border-radius: 10px;
+      padding: 10px 13px;
+      font-size: 14px;
       color: var(--text-primary);
       outline: none;
       transition: border-color .15s var(--ease);
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     .field:focus {
@@ -1124,9 +1163,34 @@
 
     textarea.field {
       resize: vertical;
-      min-height: 60px;
+      min-height: 80px;
       font-family: inherit;
-      line-height: 1.5;
+      line-height: 1.6;
+    }
+
+    select.field {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+
+    @media (max-width: 860px) {
+      .field {
+        font-size: 16px;
+        /* prevents iOS zoom on focus */
+        padding: 12px 14px;
+        border-radius: 12px;
+      }
+
+      .field-label {
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+
+      textarea.field {
+        min-height: 100px;
+      }
     }
 
     .form-row {
@@ -1222,6 +1286,7 @@
       inset: 0;
       background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1230,7 +1295,7 @@
       animation: fadeIn .18s var(--ease);
     }
 
-    @media (max-width:480px) {
+    @media (max-width:640px) {
       .modal-overlay {
         padding: 0;
         align-items: flex-end;
@@ -1239,24 +1304,25 @@
       .modal-window {
         max-width: 100%;
         width: 100%;
-        max-height: 92vh;
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        max-height: 94vh;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        /* Pull handle hint */
+        position: relative;
+      }
+
+      .modal-window::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--panel-border-strong);
+        margin: 10px auto -4px;
       }
 
       .modal-window.wide {
         max-width: 100%;
-      }
-
-      @keyframes modalIn {
-        from {
-          opacity: 0;
-          transform: translateY(24px);
-        }
-
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        max-height: 97vh;
       }
     }
 
@@ -1280,6 +1346,7 @@
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-window);
       animation: modalIn .2s var(--ease);
+      -webkit-overflow-scrolling: touch;
     }
 
     .modal-window.wide {
@@ -1302,31 +1369,39 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 18px;
+      padding: 16px 18px;
       border-bottom: 1px solid var(--panel-border);
+      position: sticky;
+      top: 0;
+      background: var(--panel-bg-solid);
+      z-index: 2;
     }
 
     .modal-header h2 {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 700;
       margin: 0;
     }
 
     .modal-body {
-      padding: 16px;
+      padding: 18px;
     }
 
     .modal-footer {
-      padding: 12px 16px;
+      padding: 14px 18px;
       border-top: 1px solid var(--panel-border);
       display: flex;
       justify-content: flex-end;
-      gap: 6px;
+      gap: 8px;
+      position: sticky;
+      bottom: 0;
+      background: var(--panel-bg-solid);
+      z-index: 2;
     }
 
     .close-x {
-      width: 24px;
-      height: 24px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -1335,6 +1410,8 @@
       color: var(--text-tertiary);
       border: none;
       background: var(--field-bg);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     .close-x:hover {
@@ -1343,8 +1420,24 @@
     }
 
     .close-x svg {
-      width: 13px;
-      height: 13px;
+      width: 14px;
+      height: 14px;
+    }
+
+    @media (max-width: 640px) {
+      .modal-body {
+        padding: 16px;
+      }
+
+      .modal-footer {
+        padding: 12px 16px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+      }
+
+      .modal-footer .btn {
+        flex: 1;
+        justify-content: center;
+      }
     }
 
     /* ---------- Tabs ---------- */
@@ -1605,12 +1698,16 @@
       background: var(--panel-bg-solid);
       border: 1px solid var(--panel-border);
       border-radius: 9px;
-      padding: 7px 8px;
+      padding: 8px 8px;
       cursor: grab;
       display: flex;
       flex-direction: column;
       gap: 4px;
       transition: opacity .15s var(--ease), transform .15s var(--ease), box-shadow .15s var(--ease), border-color .15s var(--ease);
+      touch-action: none;
+      /* allow touch drag */
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     .sched-item:hover {
@@ -1624,7 +1721,29 @@
     }
 
     .sched-item.dragging {
-      opacity: 0.35;
+      opacity: 0.38;
+    }
+
+    /* Touch drag ghost */
+    .touch-drag-ghost {
+      position: fixed;
+      z-index: 9000;
+      pointer-events: none;
+      opacity: 0.85;
+      transform: scale(1.05) rotate(2deg);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      border-radius: 10px;
+      min-width: 130px;
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--accent);
+      padding: 8px;
+    }
+
+    /* Always show sd-actions on touch */
+    @media (hover: none) {
+      .sd-actions .icon-btn {
+        opacity: 1 !important;
+      }
     }
 
     .sd-row-top {
@@ -1745,12 +1864,23 @@
       gap: 5px;
       background: var(--panel-bg-solid);
       border: 1px solid var(--panel-border);
-      padding: 4px 9px 4px 6px;
+      padding: 6px 12px 6px 8px;
       border-radius: 18px;
       cursor: grab;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 600;
       transition: transform .15s var(--ease), box-shadow .15s var(--ease), border-color .15s var(--ease);
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @media (max-width: 860px) {
+      .pool-item {
+        padding: 8px 14px 8px 10px;
+        font-size: 13px;
+      }
     }
 
     .pool-item:hover {
@@ -2006,7 +2136,7 @@
     }
 
     .viewer-fallback-title {
-      color:#dfe4ec;
+      color: #dfe4ec;
       font-weight: 700;
       font-size: 15px;
       margin: 0;
@@ -2014,7 +2144,7 @@
     }
 
     .viewer-fallback-host {
-      color:#FF375F;
+      color: #FF375F;
       font-size: 12.5px;
       margin: 0 0 6px;
     }
@@ -2096,29 +2226,35 @@
         backdrop-filter: blur(30px);
         -webkit-backdrop-filter: blur(30px);
         border-top: 1px solid var(--panel-border);
-        padding-bottom: env(safe-area-inset-bottom);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
       }
 
       .mnav-row {
         display: flex;
         justify-content: space-around;
-        padding: 6px 4px 4px;
+        padding: 8px 4px 6px;
       }
 
       .mnav-item {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 2px;
+        gap: 3px;
         color: var(--text-tertiary);
-        font-size: 9px;
+        font-size: 10px;
         font-weight: 600;
         cursor: pointer;
-        transition: color .15s var(--ease);
+        transition: color .15s var(--ease), transform .1s var(--ease);
+        padding: 4px 10px;
+        border-radius: 10px;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        min-width: 48px;
       }
 
       .mnav-item:active {
-        transform: scale(.94);
+        transform: scale(.88);
+        color: var(--accent);
       }
 
       .mnav-item.active {
@@ -2126,8 +2262,8 @@
       }
 
       .mnav-item svg {
-        width: 18px;
-        height: 18px;
+        width: 22px;
+        height: 22px;
       }
 
       .mnav-credit {
@@ -2179,6 +2315,47 @@
     @media (max-width:860px) {
       #app-footer {
         display: none;
+      }
+    }
+
+    /* ---------- Mobile schedule helper text ---------- */
+    .pool-panel .eyebrow {
+      display: block;
+    }
+
+    @media (hover: none) {
+      .pool-panel .eyebrow::after {
+        content: ' — touch & hold, then drag to a day';
+      }
+    }
+
+    /* ---------- Auth card mobile ---------- */
+    @media (max-width: 480px) {
+      .auth-card {
+        padding: 30px 20px;
+      }
+
+      .auth-card h1 {
+        font-size: 22px;
+      }
+    }
+
+    /* ---------- form-row-pair collapse on small screens ---------- */
+    @media (max-width: 480px) {
+      .form-row-pair {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    /* ---------- Swipe-able schedule hint on narrow ---------- */
+    @media (max-width: 700px) {
+      .week-grid-wrap::after {
+        content: 'Scroll side to side to see all days →';
+        display: block;
+        text-align: center;
+        font-size: 10.5px;
+        color: var(--text-tertiary);
+        padding: 6px 0 2px;
       }
     }
   </style>
@@ -3317,7 +3494,7 @@
       ${total ? `<span style="font-size:11px;color:var(--text-tertiary); white-space:nowrap;">${done} / ${total} done</span>` : ""}
     </div>
     <div class="panel pool-panel">
-      <span class="eyebrow" style="width:100%;">Drag a module into a day</span>
+      <span class="eyebrow" style="width:100%;">Drag (or tap &amp; hold) a module into a day</span>
       ${DB.modules.map(m => `
         <div class="pool-item" draggable="true" data-drag-module="${m.id}">
           <div class="sd-icon" style="background:${COLORS[m.color]}22; color:${COLORS[m.color]};">${icon(m.icon)}</div>
@@ -3387,8 +3564,8 @@
 
       let dragCtx = null;
 
-      function initScheduleDnD() {
-        const view = document.getElementById("view");
+      /* ---- Desktop HTML5 drag helpers ---- */
+      function bindDesktopDrag(view) {
         view.querySelectorAll("[data-drag-module]").forEach(el => {
           el.addEventListener("dragstart", e => {
             dragCtx = { type: "pool", moduleId: el.getAttribute("data-drag-module") };
@@ -3409,25 +3586,140 @@
           col.addEventListener("drop", e => {
             e.preventDefault();
             col.classList.remove("drag-over");
-            const day = col.getAttribute("data-day-col");
-            if (!dragCtx) return;
-            if (dragCtx.type === "pool") {
-              const order = DB.schedule.filter(s => s.day === day).length;
-              DB.schedule.push({ id: uid(), moduleId: dragCtx.moduleId, day, startTime: "", endTime: "", order, completed: false });
-              persist(); toast("Added to schedule");
-            } else if (dragCtx.type === "item") {
-              const item = DB.schedule.find(s => s.id === dragCtx.itemId);
-              if (item) {
-                item.day = day;
-                const order = DB.schedule.filter(s => s.day === day && s.id !== item.id).length;
-                item.order = order;
-                persist();
-              }
-            }
-            dragCtx = null;
-            render();
+            applyDrop(col.getAttribute("data-day-col"));
           });
         });
+      }
+
+      function applyDrop(day) {
+        if (!dragCtx) return;
+        if (dragCtx.type === "pool") {
+          const order = DB.schedule.filter(s => s.day === day).length;
+          DB.schedule.push({ id: uid(), moduleId: dragCtx.moduleId, day, startTime: "", endTime: "", order, completed: false });
+          persist(); toast("Added to schedule");
+        } else if (dragCtx.type === "item") {
+          const item = DB.schedule.find(s => s.id === dragCtx.itemId);
+          if (item) {
+            item.day = day;
+            const order = DB.schedule.filter(s => s.day === day && s.id !== item.id).length;
+            item.order = order;
+            persist();
+          }
+        }
+        dragCtx = null;
+        render();
+      }
+
+      /* ---- Touch drag-and-drop ---- */
+      let touchGhost = null;
+      let touchOffsetX = 0, touchOffsetY = 0;
+
+      function createTouchGhost(el, x, y) {
+        removeTouchGhost();
+        const rect = el.getBoundingClientRect();
+        touchOffsetX = x - rect.left;
+        touchOffsetY = y - rect.top;
+        touchGhost = document.createElement("div");
+        touchGhost.className = "touch-drag-ghost";
+        touchGhost.innerHTML = el.outerHTML;
+        touchGhost.style.width = rect.width + "px";
+        touchGhost.style.left = (x - touchOffsetX) + "px";
+        touchGhost.style.top = (y - touchOffsetY) + "px";
+        document.body.appendChild(touchGhost);
+        lucide.createIcons({ nodes: [touchGhost] });
+      }
+
+      function moveTouchGhost(x, y) {
+        if (!touchGhost) return;
+        touchGhost.style.left = (x - touchOffsetX) + "px";
+        touchGhost.style.top = (y - touchOffsetY) + "px";
+      }
+
+      function removeTouchGhost() {
+        if (touchGhost) { touchGhost.remove(); touchGhost = null; }
+      }
+
+      function getDayColUnder(x, y) {
+        removeTouchGhost();
+        const el = document.elementFromPoint(x, y);
+        createTouchGhost._hidden = true;
+        const col = el ? el.closest("[data-day-col]") : null;
+        return col;
+      }
+
+      function bindTouchDrag(view) {
+        // Pool items
+        view.querySelectorAll("[data-drag-module]").forEach(el => {
+          el.addEventListener("touchstart", e => {
+            const t = e.touches[0];
+            dragCtx = { type: "pool", moduleId: el.getAttribute("data-drag-module") };
+            createTouchGhost(el, t.clientX, t.clientY);
+            el.classList.add("dragging");
+          }, { passive: true });
+
+          el.addEventListener("touchmove", e => {
+            e.preventDefault();
+            const t = e.touches[0];
+            moveTouchGhost(t.clientX, t.clientY);
+            // Highlight day columns
+            view.querySelectorAll("[data-day-col]").forEach(c => c.classList.remove("drag-over"));
+            removeTouchGhost();
+            const under = document.elementFromPoint(t.clientX, t.clientY);
+            createTouchGhost(el, t.clientX, t.clientY);
+            const col = under ? under.closest("[data-day-col]") : null;
+            if (col) col.classList.add("drag-over");
+          }, { passive: false });
+
+          el.addEventListener("touchend", e => {
+            const t = e.changedTouches[0];
+            removeTouchGhost();
+            el.classList.remove("dragging");
+            view.querySelectorAll("[data-day-col]").forEach(c => c.classList.remove("drag-over"));
+            const under = document.elementFromPoint(t.clientX, t.clientY);
+            const col = under ? under.closest("[data-day-col]") : null;
+            if (col) applyDrop(col.getAttribute("data-day-col"));
+            else dragCtx = null;
+          }, { passive: true });
+        });
+
+        // Schedule items
+        view.querySelectorAll("[data-sched-item]").forEach(el => {
+          el.addEventListener("touchstart", e => {
+            const t = e.touches[0];
+            dragCtx = { type: "item", itemId: el.getAttribute("data-sched-item") };
+            createTouchGhost(el, t.clientX, t.clientY);
+            el.classList.add("dragging");
+          }, { passive: true });
+
+          el.addEventListener("touchmove", e => {
+            e.preventDefault();
+            const t = e.touches[0];
+            moveTouchGhost(t.clientX, t.clientY);
+            view.querySelectorAll("[data-day-col]").forEach(c => c.classList.remove("drag-over"));
+            removeTouchGhost();
+            const under = document.elementFromPoint(t.clientX, t.clientY);
+            createTouchGhost(el, t.clientX, t.clientY);
+            const col = under ? under.closest("[data-day-col]") : null;
+            if (col) col.classList.add("drag-over");
+          }, { passive: false });
+
+          el.addEventListener("touchend", e => {
+            const t = e.changedTouches[0];
+            removeTouchGhost();
+            el.classList.remove("dragging");
+            view.querySelectorAll("[data-day-col]").forEach(c => c.classList.remove("drag-over"));
+            const under = document.elementFromPoint(t.clientX, t.clientY);
+            const col = under ? under.closest("[data-day-col]") : null;
+            if (col) applyDrop(col.getAttribute("data-day-col"));
+            else dragCtx = null;
+          }, { passive: true });
+        });
+      }
+
+      function initScheduleDnD() {
+        const view = document.getElementById("view");
+        bindDesktopDrag(view);
+        bindTouchDrag(view);
       }
 
       /* ---------------- Settings ---------------- */
@@ -3533,7 +3825,7 @@
             ${Object.entries(COLORS).map(([k, v]) => `<div class="swatch ${draft.color === k ? 'selected' : ''}" style="background:${v};" data-color-choice="${k}"></div>`).join("")}
           </div>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;" class="form-row-pair">
           <div class="form-row">
             <label class="field-label">Status</label>
             <select class="field" id="f-status">
@@ -3783,8 +4075,8 @@
       <div class="modal-header"><h2>Edit Time</h2><button class="close-x" data-close-modal>${icon('x')}</button></div>
       <div class="modal-body">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-          <div class="form-row"><label class="field-label">Start</label><input type="time" class="field" id="f-start" value="${s.startTime || ''}"></div>
-          <div class="form-row"><label class="field-label">End</label><input type="time" class="field" id="f-end" value="${s.endTime || ''}"></div>
+          <div class="form-row"><label class="field-label">Start</label><input type="time" class="field" id="f-start" value="${s.startTime || ''}" style="min-height:44px;"></div>
+          <div class="form-row"><label class="field-label">End</label><input type="time" class="field" id="f-end" value="${s.endTime || ''}" style="min-height:44px;"></div>
         </div>
       </div>
       <div class="modal-footer">
