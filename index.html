@@ -102,11 +102,7 @@
       margin: 0;
       font-family: var(--font-ui);
       color: var(--text-primary);
-      background:
-        radial-gradient(circle at 15% 20%, rgba(10, 132, 255, 0.18), transparent 45%),
-        radial-gradient(circle at 85% 15%, rgba(191, 90, 242, 0.14), transparent 40%),
-        radial-gradient(circle at 50% 90%, rgba(50, 215, 75, 0.10), transparent 45%),
-        linear-gradient(160deg, var(--bg-wallpaper-1), var(--bg-wallpaper-2));
+      background: linear-gradient(175deg, var(--bg-wallpaper-1), var(--bg-wallpaper-2));
       background-attachment: fixed;
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
@@ -147,11 +143,7 @@
       position: fixed;
       inset: 0;
       z-index: 9999;
-      background:
-        radial-gradient(circle at 15% 20%, rgba(10, 132, 255, 0.18), transparent 45%),
-        radial-gradient(circle at 85% 15%, rgba(191, 90, 242, 0.14), transparent 40%),
-        radial-gradient(circle at 50% 90%, rgba(50, 215, 75, 0.10), transparent 45%),
-        linear-gradient(160deg, var(--bg-wallpaper-1), var(--bg-wallpaper-2));
+      background: linear-gradient(175deg, var(--bg-wallpaper-1), var(--bg-wallpaper-2));
       backdrop-filter: blur(40px);
       -webkit-backdrop-filter: blur(40px);
       display: flex;
@@ -795,23 +787,6 @@
       transform: translateY(-2px);
       box-shadow: var(--shadow-card-hover);
       border-color: var(--panel-border-strong);
-    }
-
-    .module-card .glow {
-      position: absolute;
-      top: -40%;
-      right: -30%;
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      filter: blur(40px);
-      opacity: 0;
-      transition: opacity .25s var(--ease);
-      pointer-events: none;
-    }
-
-    .module-card:hover .glow {
-      opacity: 0.3;
     }
 
     .module-card .icon-badge {
@@ -1724,21 +1699,6 @@
       opacity: 0.38;
     }
 
-    /* Touch drag ghost */
-    .touch-drag-ghost {
-      position: fixed;
-      z-index: 9000;
-      pointer-events: none;
-      opacity: 0.85;
-      transform: scale(1.05) rotate(2deg);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-      border-radius: 10px;
-      min-width: 130px;
-      background: var(--panel-bg-solid);
-      border: 1px solid var(--accent);
-      padding: 8px;
-    }
-
     /* Always show sd-actions on touch */
     @media (hover: none) {
       .sd-actions .icon-btn {
@@ -1903,13 +1863,384 @@
       height: 10px;
     }
 
+    /* ============================================================
+       Weekly Schedule — responsive split
+       Desktop (>=700px): 7-day grid, drag & drop.
+       Mobile (<700px): day-focused view, swipe + tap.
+       ============================================================ */
+    .sched-desktop-only {
+      display: block;
+    }
+
+    .sched-mobile-only {
+      display: none;
+    }
+
     @media (max-width:700px) {
-      .day-col {
-        min-height: 150px;
+      .sched-desktop-only {
+        display: none;
       }
 
-      .day-col.is-today {
-        min-height: 180px;
+      .sched-mobile-only {
+        display: block;
+      }
+    }
+
+    /* ---- Week summary strip (compact, both layouts) ---- */
+    .week-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 14px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin: 2px 0 16px;
+    }
+
+    .week-summary b {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    /* ---- Day strip ---- */
+    .day-strip {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 14px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .day-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .day-chip {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-width: 52px;
+      padding: 8px 4px 7px;
+      border-radius: 12px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel-bg);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .15s var(--ease), border-color .15s var(--ease), color .15s var(--ease);
+    }
+
+    .day-chip .dc-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+      margin-top: 1px;
+    }
+
+    .day-chip.is-today .dc-dot {
+      background: var(--accent);
+    }
+
+    .day-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .day-chip.active .dc-dot {
+      background: #fff;
+    }
+
+    /* ---- Day focus header ---- */
+    .day-focus-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .day-focus-head .dfh-title {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .day-focus-head .dfh-meta {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 1px;
+    }
+
+    .dfh-nav {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* ---- Next session card ---- */
+    .next-session-card {
+      padding: 14px;
+      margin-bottom: 16px;
+      border-color: rgba(var(--accent-rgb), 0.35);
+      position: relative;
+    }
+
+    .next-session-card .ns-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .next-session-card .ns-body {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .next-session-card .ns-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .next-session-card .ns-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .next-session-card .ns-name {
+      font-size: 14.5px;
+      font-weight: 700;
+    }
+
+    .next-session-card .ns-time {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      margin-top: 1px;
+    }
+
+    .next-session-card .ns-countdown {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* ---- Mobile session list ---- */
+    .day-session-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      touch-action: pan-y;
+    }
+
+    .msched-item {
+      display: flex;
+      gap: 10px;
+      padding: 12px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .msched-item .ms-time-col {
+      width: 46px;
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-tertiary);
+      padding-top: 2px;
+    }
+
+    .msched-item .ms-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .msched-item .ms-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .msched-item .ms-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .msched-item .ms-name {
+      font-size: 14px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .msched-item .ms-meta {
+      font-size: 11.5px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .msched-item .ms-check {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1.5px solid var(--panel-border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: transparent;
+      background: transparent;
+      transition: background .15s var(--ease), border-color .15s var(--ease), color .15s var(--ease);
+    }
+
+    .msched-item .ms-check svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .msched-item.completed {
+      opacity: 0.55;
+    }
+
+    .msched-item.completed .ms-name {
+      text-decoration: line-through;
+    }
+
+    .msched-item.completed .ms-check {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+    }
+
+    .day-session-list.swiping {
+      transition: transform .18s var(--ease);
+    }
+
+    /* ---- Floating add-session action (mobile) ---- */
+    .fab-add-session {
+      position: fixed;
+      right: 16px;
+      bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 18px 12px 15px;
+      border-radius: 30px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 10px 26px -8px rgba(var(--accent-rgb), 0.55);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .fab-add-session svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    @media (min-width:700px) {
+      .fab-add-session {
+        display: none;
+      }
+    }
+
+    /* ---- Quick-action sheet list ---- */
+    .qa-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .qa-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 10px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .qa-item svg {
+      width: 16px;
+      height: 16px;
+      color: var(--text-tertiary);
+    }
+
+    .qa-item:hover {
+      background: var(--hover-bg);
+    }
+
+    .qa-item.qa-danger {
+      color: var(--danger);
+    }
+
+    .qa-item.qa-danger svg {
+      color: var(--danger);
+    }
+
+    .day-picker-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .day-picker-row button {
+      padding: 7px 12px;
+      border-radius: 9px;
+      border: 1px solid var(--panel-border);
+      background: var(--field-bg);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .day-picker-row button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .desktop-add-session-btn {
+      display: none;
+    }
+
+    @media (min-width:700px) {
+      .desktop-add-session-btn {
+        display: inline-flex;
       }
     }
 
@@ -2047,6 +2378,30 @@
       width: 14px;
       height: 14px;
       color: var(--success);
+    }
+
+    .toast-undo {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 2px 0 2px 8px;
+      margin-left: 2px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @media (max-width:700px) {
+      #toast-root {
+        bottom: calc(148px + env(safe-area-inset-bottom, 0px));
+        right: 12px;
+        left: 12px;
+      }
+
+      .toast {
+        justify-content: center;
+      }
     }
 
     /* ---------- Resource viewer ---------- */
@@ -3032,7 +3387,8 @@
         resourceFilter: "all",
         moduleFilter: "all",
         moduleTab: "resources",
-        sidebarCompact: false
+        sidebarCompact: false,
+        scheduleDay: null // selected day on the mobile day-focused schedule view
       };
 
       const getModule = id => DB.modules.find(m => m.id === id);
@@ -3262,7 +3618,6 @@
         const isImportant = (m.priority === "High" || m.priority === "Critical") && m.status !== "Completed";
         return `
   <div class="panel module-card ${isImportant ? 'on-fire' : ''}" data-open-module="${m.id}">
-    <div class="glow" style="background:${color}"></div>
     ${isImportant ? `<div class="fire-badge" title="${m.priority} priority — active focus">${icon('flame')}</div>` : ""}
     <div class="module-actions">
       <button class="icon-btn" data-open-module="${m.id}" title="Open">${icon('arrow-up-right')}</button>
@@ -3482,34 +3837,167 @@
       }
 
       /* ---------------- Schedule ---------------- */
+      const DAY_SHORT = { monday: "Mon", tuesday: "Tue", wednesday: "Wed", thursday: "Thu", friday: "Fri", saturday: "Sat", sunday: "Sun" };
+      const DAY_ACCENTS = [COLORS.blue, COLORS.purple, COLORS.green, COLORS.orange, COLORS.pink, COLORS.cyan, COLORS.red];
+
+      function todayKey() { return DAYS[(new Date().getDay() + 6) % 7]; }
+      function timeToMinutes(t) {
+        if (!t || typeof t !== "string" || !t.includes(":")) return null;
+        const [h, m] = t.split(":").map(Number);
+        if (Number.isNaN(h) || Number.isNaN(m)) return null;
+        return h * 60 + m;
+      }
+      function durationMinutes(s) {
+        const a = timeToMinutes(s.startTime), b = timeToMinutes(s.endTime);
+        if (a == null || b == null || b <= a) return 0;
+        return b - a;
+      }
+      function fmtDuration(mins) {
+        mins = Math.round(mins);
+        if (mins <= 0) return "0m";
+        const h = Math.floor(mins / 60), m = mins % 60;
+        if (h && m) return `${h}h ${m}m`;
+        if (h) return `${h}h`;
+        return `${m}m`;
+      }
+      function scheduleSort(a, b) {
+        const ta = timeToMinutes(a.startTime); const tb = timeToMinutes(b.startTime);
+        const va = ta == null ? 9999 : ta, vb = tb == null ? 9999 : tb;
+        if (va !== vb) return va - vb;
+        return (a.order || 0) - (b.order || 0);
+      }
+      function dayItems(day) { return DB.schedule.filter(s => s.day === day).sort(scheduleSort); }
+      function nextUpcomingSessionToday() {
+        const items = dayItems(todayKey()).filter(s => !s.completed);
+        if (!items.length) return null;
+        const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+        return items.find(s => { const t = timeToMinutes(s.startTime); return t == null || t >= nowMin; }) || items[0];
+      }
+
+      function renderWeekSummary() {
+        const items = DB.schedule;
+        const total = items.length;
+        if (!total) return "";
+        const done = items.filter(s => s.completed).length;
+        const plannedMin = items.reduce((a, s) => a + durationMinutes(s), 0);
+        return `<div class="week-summary">
+      <span>This week · <b>${total}</b> session${total === 1 ? '' : 's'}</span>
+      <span><b>${done}</b> completed</span>
+      ${plannedMin ? `<span><b>${fmtDuration(plannedMin)}</b> planned</span>` : ""}
+    </div>`;
+      }
+
       function renderSchedulePage() {
-        const total = DB.schedule.length;
-        const done = DB.schedule.filter(s => s.completed).length;
+        if (!State.scheduleDay || !DAYS.includes(State.scheduleDay)) State.scheduleDay = todayKey();
         return `
     <div class="flex-between">
       <div>
         <h1 class="page-title">Weekly Schedule</h1>
-        <p class="page-sub" style="margin-bottom:0;">Drag modules onto a day to plan your week.</p>
+        <p class="page-sub" style="margin-bottom:0;">Plan your week and track study time.</p>
       </div>
-      ${total ? `<span style="font-size:11px;color:var(--text-tertiary); white-space:nowrap;">${done} / ${total} done</span>` : ""}
+      <button class="btn btn-secondary desktop-add-session-btn" data-open-add-session="${State.scheduleDay}">${icon('plus', 'style="width:13px;height:13px"')} Add session</button>
     </div>
-    <div class="panel pool-panel">
-      <span class="eyebrow" style="width:100%;">Drag (or tap &amp; hold) a module into a day</span>
-      ${DB.modules.map(m => `
-        <div class="pool-item" draggable="true" data-drag-module="${m.id}">
-          <div class="sd-icon" style="background:${COLORS[m.color]}22; color:${COLORS[m.color]};">${icon(m.icon)}</div>
-          ${esc(m.name)}
-        </div>`).join("")}
-    </div>
-    <div class="week-grid-wrap">
-      <div class="week-grid" style="grid-template-columns:${weekGridTemplate()};">
-        ${DAYS.map(d => renderDayColumn(d)).join("")}
+    ${renderWeekSummary()}
+    <div class="sched-desktop-only">
+      <div class="panel pool-panel">
+        <span class="eyebrow" style="width:100%;">Drag a module onto a day, or use Add session</span>
+        ${DB.modules.length ? DB.modules.map(m => `
+          <div class="pool-item" draggable="true" data-drag-module="${m.id}">
+            <div class="sd-icon" style="background:${COLORS[m.color]}22; color:${COLORS[m.color]};">${icon(m.icon)}</div>
+            ${esc(m.name)}
+          </div>`).join("") : `<span style="font-size:12px;color:var(--text-tertiary);">Add a module first, then schedule it here.</span>`}
       </div>
+      <div class="week-grid-wrap">
+        <div class="week-grid" style="grid-template-columns:${weekGridTemplate()};">
+          ${DAYS.map(d => renderDayColumn(d)).join("")}
+        </div>
+      </div>
+    </div>
+    <div class="sched-mobile-only">
+      ${renderMobileSchedule()}
+    </div>
+    <button class="fab-add-session" data-open-add-session="${State.scheduleDay}">${icon('plus')} Add session</button>
+  `;
+      }
+
+      function renderMobileSchedule() {
+        const day = State.scheduleDay;
+        const tKey = todayKey();
+        const items = dayItems(day);
+        const plannedMin = items.reduce((a, s) => a + durationMinutes(s), 0);
+        const next = day === tKey ? nextUpcomingSessionToday() : null;
+        return `
+    <div class="day-strip" id="day-strip">
+      ${DAYS.map(d => `
+        <button type="button" class="day-chip ${d === day ? 'active' : ''} ${d === tKey ? 'is-today' : ''}" data-mobile-day="${d}">
+          ${DAY_SHORT[d]}<span class="dc-dot"></span>
+        </button>`).join("")}
+    </div>
+    <div class="day-focus-head">
+      <div>
+        <div class="dfh-title">${DAY_LABEL[day]}${day === tKey ? ' · Today' : ''}</div>
+        <div class="dfh-meta">${items.length} session${items.length === 1 ? '' : 's'}${items.length ? ' · ' + fmtDuration(plannedMin) + ' planned' : ''}</div>
+      </div>
+      <div class="dfh-nav">
+        <button class="icon-btn" data-day-nav="prev" title="Previous day">${icon('chevron-left')}</button>
+        <button class="icon-btn" data-day-nav="next" title="Next day">${icon('chevron-right')}</button>
+      </div>
+    </div>
+    ${next ? renderNextSessionCard(next) : ""}
+    <div class="day-session-list" id="day-session-list">
+      ${items.length ? items.map(s => scheduleItemMobileHtml(s)).join("") : renderScheduleEmptyState(day)}
     </div>
   `;
       }
 
-      const DAY_ACCENTS = [COLORS.blue, COLORS.purple, COLORS.green, COLORS.orange, COLORS.pink, COLORS.cyan, COLORS.red];
+      function renderNextSessionCard(s) {
+        const m = getModule(s.moduleId); if (!m) return "";
+        const color = COLORS[m.color];
+        const t = timeToMinutes(s.startTime);
+        let countdown = "";
+        if (t != null) {
+          const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+          countdown = t <= nowMin ? "In progress" : `Starts in ${fmtDuration(t - nowMin)}`;
+        }
+        return `<div class="panel next-session-card">
+      <div class="ns-eyebrow">${icon('zap', 'style="width:11px;height:11px"')} Next up</div>
+      <div class="ns-body">
+        <div class="ns-icon" style="background:${color}22;color:${color};">${icon(m.icon)}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="ns-name">${esc(m.name)}</div>
+          <div class="ns-time">${s.startTime || 'No time set'}${s.endTime ? ' – ' + s.endTime : ''}</div>
+          ${countdown ? `<div class="ns-countdown">${countdown}</div>` : ""}
+        </div>
+        <button class="btn btn-secondary" data-open-quick-actions="${s.id}" style="flex-shrink:0;">Open</button>
+      </div>
+    </div>`;
+      }
+
+      function renderScheduleEmptyState(day) {
+        return `<div class="panel" style="padding:30px 16px; text-align:center;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px;">No study sessions yet.</div>
+      <p style="font-size:12px;color:var(--text-tertiary);margin:0 0 14px;">Add a session to start planning ${DAY_LABEL[day]}.</p>
+      <button class="btn btn-primary" data-open-add-session="${day}" style="margin:0 auto;">${icon('plus', 'style="width:13px;height:13px"')} Add session</button>
+    </div>`;
+      }
+
+      function scheduleItemMobileHtml(s) {
+        const m = getModule(s.moduleId);
+        if (!m) return "";
+        const color = COLORS[m.color];
+        const timeLabel = (s.startTime || s.endTime) ? `${s.startTime || '--:--'}${s.endTime ? ' – ' + s.endTime : ''}` : "No time set";
+        const dur = durationMinutes(s);
+        return `
+  <div class="panel msched-item ${s.completed ? 'completed' : ''}" data-open-quick-actions="${s.id}">
+    <div class="ms-time-col">${s.startTime || ''}</div>
+    <div class="ms-icon" style="background:${color}22; color:${color};">${icon(m.icon)}</div>
+    <div class="ms-body">
+      <div class="ms-name">${esc(m.name)}</div>
+      <div class="ms-meta"><span>${timeLabel}</span>${dur ? `<span>· ${fmtDuration(dur)}</span>` : ""}${s.completed ? `<span>· Completed</span>` : ""}</div>
+    </div>
+    <button class="ms-check" data-toggle-sched="${s.id}" title="Mark complete">${icon('check')}</button>
+  </div>`;
+      }
 
       function weekGridTemplate() {
         const todayIdx = new Date().getDay();
@@ -3610,116 +4098,235 @@
         render();
       }
 
-      /* ---- Touch drag-and-drop ---- */
-      let touchGhost = null;
-      let touchOffsetX = 0, touchOffsetY = 0;
-
-      function createTouchGhost(el, x, y) {
-        removeTouchGhost();
-        const rect = el.getBoundingClientRect();
-        touchOffsetX = x - rect.left;
-        touchOffsetY = y - rect.top;
-        touchGhost = document.createElement("div");
-        touchGhost.className = "touch-drag-ghost";
-        touchGhost.innerHTML = el.outerHTML;
-        touchGhost.style.width = rect.width + "px";
-        touchGhost.style.left = (x - touchOffsetX) + "px";
-        touchGhost.style.top = (y - touchOffsetY) + "px";
-        document.body.appendChild(touchGhost);
-        lucide.createIcons({ nodes: [touchGhost] });
+      /* ---- Mobile schedule interactions ----
+         Mobile intentionally does NOT reuse desktop's ghost-drag: on a phone the
+         primary and most reliable way to move a session is a two-tap flow
+         (open the session → "Move to another day"). Swiping the day list
+         switches days; tapping a day chip jumps directly. This trades the
+         advanced drag gesture for something that never mis-fires on a
+         touchscreen. */
+      function goToDay(day) { State.scheduleDay = day; render(); }
+      function shiftDay(delta) {
+        const day = State.scheduleDay || todayKey();
+        const i = DAYS.indexOf(day);
+        goToDay(DAYS[(i + delta + 7) % 7]);
       }
 
-      function moveTouchGhost(x, y) {
-        if (!touchGhost) return;
-        touchGhost.style.left = (x - touchOffsetX) + "px";
-        touchGhost.style.top = (y - touchOffsetY) + "px";
-      }
-
-      function removeTouchGhost() {
-        if (touchGhost) { touchGhost.remove(); touchGhost = null; }
-      }
-
-      function getDayColUnder(x, y) {
-        removeTouchGhost();
-        const el = document.elementFromPoint(x, y);
-        createTouchGhost._hidden = true;
-        const col = el ? el.closest("[data-day-col]") : null;
-        return col;
-      }
-
-      function bindTouchDrag(view) {
-        // Pool items
-        view.querySelectorAll("[data-drag-module]").forEach(el => {
-          el.addEventListener("touchstart", e => {
-            const t = e.touches[0];
-            dragCtx = { type: "pool", moduleId: el.getAttribute("data-drag-module") };
-            createTouchGhost(el, t.clientX, t.clientY);
-            el.classList.add("dragging");
-          }, { passive: true });
-
-          el.addEventListener("touchmove", e => {
-            e.preventDefault();
-            const t = e.touches[0];
-            moveTouchGhost(t.clientX, t.clientY);
-            // Highlight day columns
-            view.querySelectorAll("[data-day-col]").forEach(c => c.classList.remove("drag-over"));
-            removeTouchGhost();
-            const under = document.elementFromPoint(t.clientX, t.clientY);
-            createTouchGhost(el, t.clientX, t.clientY);
-            const col = under ? under.closest("[data-day-col]") : null;
-            if (col) col.classList.add("drag-over");
-          }, { passive: false });
-
-          el.addEventListener("touchend", e => {
-            const t = e.changedTouches[0];
-            removeTouchGhost();
-            el.classList.remove("dragging");
-            view.querySelectorAll("[data-day-col]").forEach(c => c.classList.remove("drag-over"));
-            const under = document.elementFromPoint(t.clientX, t.clientY);
-            const col = under ? under.closest("[data-day-col]") : null;
-            if (col) applyDrop(col.getAttribute("data-day-col"));
-            else dragCtx = null;
-          }, { passive: true });
+      function bindMobileScheduleInteractions(view) {
+        view.querySelectorAll("[data-mobile-day]").forEach(el => {
+          el.addEventListener("click", () => goToDay(el.getAttribute("data-mobile-day")));
+        });
+        view.querySelectorAll("[data-day-nav]").forEach(el => {
+          el.addEventListener("click", () => shiftDay(el.getAttribute("data-day-nav") === "next" ? 1 : -1));
+        });
+        view.querySelectorAll("[data-open-add-session]").forEach(el => {
+          el.addEventListener("click", () => openAddSessionSheet(el.getAttribute("data-open-add-session")));
+        });
+        view.querySelectorAll("[data-open-quick-actions]").forEach(el => {
+          el.addEventListener("click", (e) => {
+            if (e.target.closest("[data-toggle-sched]")) return;
+            openScheduleQuickActions(el.getAttribute("data-open-quick-actions"));
+          });
         });
 
-        // Schedule items
-        view.querySelectorAll("[data-sched-item]").forEach(el => {
-          el.addEventListener("touchstart", e => {
-            const t = e.touches[0];
-            dragCtx = { type: "item", itemId: el.getAttribute("data-sched-item") };
-            createTouchGhost(el, t.clientX, t.clientY);
-            el.classList.add("dragging");
-          }, { passive: true });
-
-          el.addEventListener("touchmove", e => {
-            e.preventDefault();
-            const t = e.touches[0];
-            moveTouchGhost(t.clientX, t.clientY);
-            view.querySelectorAll("[data-day-col]").forEach(c => c.classList.remove("drag-over"));
-            removeTouchGhost();
-            const under = document.elementFromPoint(t.clientX, t.clientY);
-            createTouchGhost(el, t.clientX, t.clientY);
-            const col = under ? under.closest("[data-day-col]") : null;
-            if (col) col.classList.add("drag-over");
-          }, { passive: false });
-
-          el.addEventListener("touchend", e => {
-            const t = e.changedTouches[0];
-            removeTouchGhost();
-            el.classList.remove("dragging");
-            view.querySelectorAll("[data-day-col]").forEach(c => c.classList.remove("drag-over"));
-            const under = document.elementFromPoint(t.clientX, t.clientY);
-            const col = under ? under.closest("[data-day-col]") : null;
-            if (col) applyDrop(col.getAttribute("data-day-col"));
-            else dragCtx = null;
-          }, { passive: true });
-        });
+        const list = document.getElementById("day-session-list");
+        if (!list) return;
+        let sx = 0, sy = 0, tracking = false;
+        list.addEventListener("pointerdown", e => {
+          if (e.pointerType === "mouse") return;
+          sx = e.clientX; sy = e.clientY; tracking = true;
+        }, { passive: true });
+        list.addEventListener("pointerup", e => {
+          if (!tracking) return;
+          tracking = false;
+          const dx = e.clientX - sx, dy = e.clientY - sy;
+          // Require a clear, mostly-horizontal swipe so normal vertical
+          // scrolling of the list is never hijacked.
+          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+            shiftDay(dx < 0 ? 1 : -1);
+          }
+        }, { passive: true });
+        list.addEventListener("pointercancel", () => { tracking = false; }, { passive: true });
       }
 
       function initScheduleDnD() {
         const view = document.getElementById("view");
         bindDesktopDrag(view);
-        bindTouchDrag(view);
+        bindMobileScheduleInteractions(view);
+      }
+
+      /* ---- Add session (bottom sheet on mobile, modal on desktop) ---- */
+      function openAddSessionSheet(day) {
+        if (!DB.modules.length) { toast("Add a module first", "error"); return; }
+        let selectedDay = DAYS.includes(day) ? day : (State.scheduleDay || todayKey());
+        openModal(`
+    <div class="modal-window">
+      <div class="modal-header"><h2>Add study session</h2><button class="close-x" data-close-modal>${icon('x')}</button></div>
+      <div class="modal-body">
+        <div class="form-row">
+          <label class="field-label">Module</label>
+          <select class="field" id="as-module">
+            ${DB.modules.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="field-label">Day</label>
+          <div class="day-picker-row" id="as-day-picker">
+            ${DAYS.map(d => `<button type="button" data-as-day="${d}" class="${d === selectedDay ? 'active' : ''}">${DAY_SHORT[d]}</button>`).join("")}
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-row"><label class="field-label">Start</label><input type="time" class="field" id="as-start" value="09:00" style="min-height:44px;"></div>
+          <div class="form-row"><label class="field-label">End</label><input type="time" class="field" id="as-end" value="10:00" style="min-height:44px;"></div>
+        </div>
+        <p id="as-error" style="display:none; color:var(--danger); font-size:12px; margin:6px 0 0;"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button class="btn btn-primary" id="as-save">Add session</button>
+      </div>
+    </div>
+  `);
+        document.querySelectorAll("#as-day-picker [data-as-day]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            selectedDay = btn.getAttribute("data-as-day");
+            document.querySelectorAll("#as-day-picker [data-as-day]").forEach(b => b.classList.toggle("active", b === btn));
+          });
+        });
+        document.getElementById("as-save").addEventListener("click", () => {
+          const moduleId = document.getElementById("as-module").value;
+          const start = document.getElementById("as-start").value;
+          const end = document.getElementById("as-end").value;
+          const err = document.getElementById("as-error");
+          if (start && end && timeToMinutes(end) <= timeToMinutes(start)) {
+            err.textContent = "End time must be after start time.";
+            err.style.display = "block";
+            return;
+          }
+          const order = DB.schedule.filter(s => s.day === selectedDay).length;
+          DB.schedule.push({ id: uid(), moduleId, day: selectedDay, startTime: start || "", endTime: end || "", order, completed: false, createdAt: now() });
+          persist();
+          State.scheduleDay = selectedDay;
+          closeModal();
+          render();
+          toast("Session added");
+        });
+      }
+
+      /* ---- Quick actions sheet for a single session (mobile-first) ---- */
+      function openScheduleQuickActions(id) {
+        const s = DB.schedule.find(x => x.id === id);
+        if (!s) return;
+        const m = getModule(s.moduleId);
+        openModal(`
+    <div class="modal-window">
+      <div class="modal-header">
+        <h2>${m ? esc(m.name) : "Session"}</h2>
+        <button class="close-x" data-close-modal>${icon('x')}</button>
+      </div>
+      <div class="modal-body" style="padding-top:6px;">
+        <div class="qa-list">
+          <div class="qa-item" data-qa="toggle">${icon(s.completed ? 'rotate-ccw' : 'check')}<span>${s.completed ? 'Mark as not done' : 'Mark complete'}</span></div>
+          <div class="qa-item" data-qa="time">${icon('clock')}<span>Edit time</span></div>
+          <div class="qa-item" data-qa="move">${icon('calendar')}<span>Move to another day</span></div>
+          <div class="qa-item" data-qa="duplicate">${icon('copy')}<span>Duplicate to today</span></div>
+          <div class="qa-item qa-danger" data-qa="delete">${icon('trash-2')}<span>Delete</span></div>
+        </div>
+      </div>
+    </div>
+  `);
+        document.querySelector('[data-qa="toggle"]').addEventListener("click", () => {
+          s.completed = !s.completed; persist(); closeModal(); render();
+        });
+        document.querySelector('[data-qa="time"]').addEventListener("click", () => {
+          closeModal(); openScheduleTimeDialog(id);
+        });
+        document.querySelector('[data-qa="move"]').addEventListener("click", () => {
+          closeModal(); openMoveSessionDialog(id);
+        });
+        document.querySelector('[data-qa="duplicate"]').addEventListener("click", () => {
+          duplicateScheduleSession(id); closeModal();
+        });
+        document.querySelector('[data-qa="delete"]').addEventListener("click", () => {
+          closeModal(); deleteScheduleSession(id);
+        });
+      }
+
+      function openMoveSessionDialog(id) {
+        const s = DB.schedule.find(x => x.id === id);
+        if (!s) return;
+        let target = s.day;
+        openModal(`
+    <div class="modal-window">
+      <div class="modal-header"><h2>Move to another day</h2><button class="close-x" data-close-modal>${icon('x')}</button></div>
+      <div class="modal-body">
+        <div class="day-picker-row" id="mv-day-picker">
+          ${DAYS.map(d => `<button type="button" data-mv-day="${d}" class="${d === target ? 'active' : ''}">${DAY_SHORT[d]}</button>`).join("")}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button class="btn btn-primary" id="mv-save">Move</button>
+      </div>
+    </div>
+  `);
+        document.querySelectorAll("#mv-day-picker [data-mv-day]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            target = btn.getAttribute("data-mv-day");
+            document.querySelectorAll("#mv-day-picker [data-mv-day]").forEach(b => b.classList.toggle("active", b === btn));
+          });
+        });
+        document.getElementById("mv-save").addEventListener("click", () => {
+          s.day = target;
+          s.order = DB.schedule.filter(x => x.day === target && x.id !== s.id).length;
+          persist();
+          State.scheduleDay = target;
+          closeModal(); render();
+          toast(`Moved to ${DAY_LABEL[target]}`);
+        });
+      }
+
+      function duplicateScheduleSession(id) {
+        const s = DB.schedule.find(x => x.id === id);
+        if (!s) return;
+        const day = todayKey();
+        const order = DB.schedule.filter(x => x.day === day).length;
+        DB.schedule.push({ id: uid(), moduleId: s.moduleId, day, startTime: s.startTime, endTime: s.endTime, order, completed: false, createdAt: now() });
+        persist();
+        State.scheduleDay = day;
+        render();
+        toast("Duplicated to today");
+      }
+
+      function deleteScheduleSession(id) {
+        const idx = DB.schedule.findIndex(x => x.id === id);
+        if (idx === -1) return;
+        const [removed] = DB.schedule.splice(idx, 1);
+        persist();
+        render();
+        toastUndo("Session removed", () => {
+          DB.schedule.push(removed);
+          persist(); render();
+        });
+      }
+
+      // A toast with an inline Undo action, for destructive operations.
+      function toastUndo(msg, onUndo) {
+        const root = document.getElementById("toast-root");
+        const el = document.createElement("div");
+        el.className = "toast";
+        el.innerHTML = `<i data-lucide="check-circle-2"></i><span>${esc(msg)}</span><button class="toast-undo">Undo</button>`;
+        root.appendChild(el);
+        lucide.createIcons({ nodes: [el] });
+        let done = false;
+        const dismiss = () => {
+          if (done) return; done = true;
+          el.style.transition = "opacity .2s ease, transform .2s ease";
+          el.style.opacity = "0"; el.style.transform = "translateY(6px)";
+          setTimeout(() => el.remove(), 200);
+        };
+        el.querySelector(".toast-undo").addEventListener("click", () => { done = true; el.remove(); onUndo(); });
+        setTimeout(dismiss, 5000);
       }
 
       /* ---------------- Settings ---------------- */
@@ -4315,8 +4922,7 @@
         }));
         view.querySelectorAll("[data-delete-sched]").forEach(el => el.addEventListener("click", (e) => {
           e.stopPropagation();
-          DB.schedule = DB.schedule.filter(x => x.id !== el.getAttribute("data-delete-sched"));
-          persist(); render(); toast("Removed from schedule");
+          deleteScheduleSession(el.getAttribute("data-delete-sched"));
         }));
         view.querySelectorAll("[data-edit-sched]").forEach(el => el.addEventListener("click", (e) => {
           e.stopPropagation(); openScheduleTimeDialog(el.getAttribute("data-edit-sched"));
