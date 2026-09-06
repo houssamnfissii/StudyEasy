@@ -1260,6 +1260,107 @@
     .youtube-shell {
       width:100%; height:100%; min-height:0; display:flex; flex-direction:column; background:#050506;
     }
+
+    /* Normal single-video viewer: keep YouTube at a natural 16:9 ratio
+       instead of stretching the video to fill the entire viewer window. */
+    .youtube-single-shell {
+      overflow:auto;
+      background:radial-gradient(circle at top, rgba(255,255,255,.035), transparent 42%), #050506;
+    }
+    .youtube-single-content {
+      width:min(1120px, 100%);
+      margin:auto;
+      padding:28px;
+    }
+    .youtube-single-video {
+      position:relative;
+      width:100%;
+      aspect-ratio:16 / 9;
+      max-height:calc(100vh - 190px);
+      margin:auto;
+      background:#000;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 24px 70px rgba(0,0,0,.38);
+    }
+    .youtube-single-video iframe {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:0;
+      display:block;
+      background:#000;
+    }
+    .youtube-single-info {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-top:12px;
+      padding:12px 14px;
+      border:1px solid var(--panel-border);
+      border-radius:13px;
+      background:var(--panel-bg);
+    }
+    .youtube-single-icon {
+      width:36px;
+      height:36px;
+      flex:0 0 36px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:10px;
+      background:rgba(255,69,58,.12);
+      color:#ff453a;
+    }
+    .youtube-single-icon svg { width:18px; height:18px; }
+    .youtube-single-copy { min-width:0; flex:1; }
+    .youtube-single-title {
+      font-size:13px;
+      font-weight:700;
+      color:var(--text-primary);
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .youtube-single-sub {
+      display:flex;
+      align-items:center;
+      gap:6px;
+      margin-top:4px;
+      color:var(--text-tertiary);
+      font-size:10.5px;
+    }
+    .youtube-open-btn {
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      flex:0 0 auto;
+      padding:8px 11px;
+      border:1px solid var(--panel-border);
+      border-radius:9px;
+      background:var(--field-bg);
+      color:var(--text-secondary);
+      text-decoration:none;
+      font-size:11px;
+      font-weight:600;
+      transition:all .15s var(--ease);
+    }
+    .youtube-open-btn:hover {
+      color:var(--text-primary);
+      background:var(--hover-bg);
+      border-color:var(--panel-border-strong);
+    }
+    .youtube-open-btn svg { width:14px; height:14px; }
+    @media (max-width:700px) {
+      .youtube-single-content { padding:12px; }
+      .youtube-single-video { border-radius:11px; max-height:none; }
+      .youtube-single-info { padding:10px; }
+      .youtube-single-title { font-size:12px; }
+      .youtube-open-btn span { display:none; }
+      .youtube-open-btn { width:34px; height:34px; padding:0; justify-content:center; }
+    }
     .youtube-playlist-layout {
       flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) 320px; background:#000;
     }
@@ -4342,10 +4443,20 @@ textarea.field::placeholder {
         active?.scrollIntoView({ block: 'nearest' });
       }
 
+      // YouTube Data API v3 key supplied for this StudyEasy app.
+      // IMPORTANT: restrict this key in Google Cloud Console to your site's origins
+      // and only enable the APIs that this app actually uses.
+      const STUDYEASY_YOUTUBE_API_KEY = "AIzaSyBXVClaaNgraJ3c72RVZJ1ogQsBadQBvbM";
+
       function getYouTubeApiKey() {
         const fromDb = DB?.settings?.youtubeApiKey;
         if (fromDb) return String(fromDb).trim();
-        try { return String(localStorage.getItem("studyeasy_youtube_api_key") || "").trim(); } catch (e) { return ""; }
+        try {
+          const stored = String(localStorage.getItem("studyeasy_youtube_api_key") || "").trim();
+          return stored || STUDYEASY_YOUTUBE_API_KEY;
+        } catch (e) {
+          return STUDYEASY_YOUTUBE_API_KEY;
+        }
       }
 
       function saveYouTubeApiKey(value) {
@@ -5592,7 +5703,22 @@ textarea.field::placeholder {
         </div>
       </div>`;
           } else {
-            bodyHtml = `<div class="youtube-shell"><div class="youtube-stage"><iframe id="youtube-resource-frame" src="${esc(embedUrl)}" title="${esc(r.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div><div class="youtube-info-bar"><span class="yt-live-dot"></span><span>YouTube video</span></div></div>`;
+            bodyHtml = `
+      <div class="youtube-shell youtube-single-shell">
+        <div class="youtube-single-content">
+          <div class="youtube-single-video">
+            <iframe id="youtube-resource-frame" src="${esc(embedUrl)}" title="${esc(r.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          </div>
+          <div class="youtube-single-info">
+            <div class="youtube-single-icon">${icon('youtube')}</div>
+            <div class="youtube-single-copy">
+              <div class="youtube-single-title">${esc(r.title)}</div>
+              <div class="youtube-single-sub"><span class="yt-live-dot"></span> YouTube video</div>
+            </div>
+            <a class="youtube-open-btn" href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${icon('external-link')}<span>Open on YouTube</span></a>
+          </div>
+        </div>
+      </div>`;
           }
         } else if (r.type === "pdf") {
           const isDrive = !!driveFileId(r.url);
