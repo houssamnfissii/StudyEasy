@@ -916,6 +916,15 @@
       gap: 12px;
     }
 
+    /* Resource cards are a wide row layout (fixed thumb + flexible text + actions),
+       so they must stack in a single column rather than squeeze into a narrow grid
+       column — that squeeze is what causes truncated titles/thumbnails. */
+    .resources-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     /* ---------- "On fire" state ---------- */
     .module-card.on-fire {
       border-color: rgba(255, 120, 20, 0.35);
@@ -4677,7 +4686,7 @@ textarea.field::placeholder {
       <div></div>
       <button class="btn btn-primary btn-sm" data-open-resource-dialog="${m.id}">${icon('plus', 'style="width:12px;height:12px"')} Add</button>
     </div>
-    ${res.length ? `<div class="modules-grid">${res.map(r => resourceCard(r, true)).join("")}</div>` :
+    ${res.length ? `<div class="resources-grid">${res.map(r => resourceCard(r, true)).join("")}</div>` :
             emptyState("library", "No resources yet.", "Attach videos, PDFs, websites or links.", "Add Resource", `data-open-resource-dialog="${m.id}"`)}
   `;
       }
@@ -5229,7 +5238,7 @@ textarea.field::placeholder {
     <div style="display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;">
       ${types.map(t => `<button class="btn btn-sm ${State.resourceFilter === t ? 'btn-primary' : 'btn-secondary'}" data-res-filter="${t}">${t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}</button>`).join("")}
     </div>
-    ${items.length ? `<div class="modules-grid">${items.map(r => {
+    ${items.length ? `<div class="resources-grid">${items.map(r => {
           const mod = getModule(r.moduleId);
           return `<div style="position:relative;">${resourceCard(r, true)}${mod ? `<div style="font-size:10px; color:var(--text-tertiary); margin:-6px 0 0 4px;">in ${esc(mod.name)}</div>` : ""}</div>`;
         }).join("")}</div>` : emptyState("library", "No resources found.", "Add resources from within a module.", null, "")}
