@@ -1255,6 +1255,25 @@
       box-shadow: var(--shadow-card);
     }
 
+    /* ---------- YouTube resource viewer ---------- */
+    .youtube-shell {
+      width:100%; height:100%; display:flex; flex-direction:column; min-height:0; background:#000;
+    }
+    .youtube-shell iframe { flex:1; min-height:0; width:100%; border:0; background:#000; }
+    .youtube-info-bar {
+      min-height:32px; padding:6px 10px; display:flex; align-items:center; gap:7px;
+      background:rgba(18,18,22,.96); border-top:1px solid rgba(255,255,255,.08);
+      color:rgba(255,255,255,.55); font-size:10.5px; flex-shrink:0;
+    }
+    .yt-live-dot { width:6px; height:6px; border-radius:50%; background:#ff453a; box-shadow:0 0 7px rgba(255,69,58,.7); flex-shrink:0; }
+    .yt-id-chip { margin-left:auto; font-family:var(--font-mono); font-size:9px; padding:2px 6px; border:1px solid rgba(255,255,255,.09); border-radius:6px; color:rgba(255,255,255,.35); }
+    .yt-playlist-pill { background:rgba(255,69,58,.12); color:#ff453a; font-size:9px; }
+    .yt-input-hint { margin-top:5px; font-size:10.5px; color:var(--text-tertiary); line-height:1.45; }
+
+    /* Keep authentication/sync completely out of the critical rendering path. */
+    #auth-overlay.is-background-sync { pointer-events:none; opacity:0; visibility:hidden; }
+    .sync-background-indicator { display:inline-flex; align-items:center; gap:5px; }
+
     /* ---------- Modal ---------- */
     .modal-overlay {
       position: fixed;
@@ -2944,9 +2963,15 @@
           });
           Google.ready = true;
 
-          // Promptless request to refresh token & trigger handleTokenResponse for sync in background
-          try { Google.tokenClient.requestAccessToken({ prompt: "" }); } catch (e) { }
-          scheduleProactiveTokenRefresh();
+          // Never block boot on Google auth. The app is already usable from localStorage.
+          // A promptless token request can still surface a browser popup in some Google
+          // account states, so it is deferred until the app is idle/connected.
+          scheduleProactiveTokenRefresh(true);
+          setTimeout(() => {
+            if (!document.hidden && Google.signedIn && Google.tokenClient && !Google.accessToken) {
+              try { Google.tokenClient.requestAccessToken({ prompt: "", login_hint: Google.profile.email || undefined }); } catch (e) { }
+            }
+          }, 3500);
 
         } else {
           // Need manual login
@@ -3069,14 +3094,23 @@
       // This is what makes edits feel "always synced" — the token is usually
       // already warm by the time the user makes a change.
       let proactiveRefreshTimer = null;
-      function scheduleProactiveTokenRefresh() {
+      function scheduleProactiveTokenRefresh(initialBoot = false) {
         if (proactiveRefreshTimer) clearTimeout(proactiveRefreshTimer);
         if (!Google.signedIn) return;
-        const msUntilRefresh = Math.max(30000, (Google.tokenExpiresAt || Date.now()) - Date.now() - 5 * 60 * 1000);
+        // If there is no token after a hard refresh, don't immediately create an
+        // auth popup. Give the restored app time to paint first.
+        const fallbackDelay = initialBoot ? 30000 : 60000;
+        const msUntilRefresh = Google.accessToken
+          ? Math.max(30000, (Google.tokenExpiresAt || Date.now()) - Date.now() - 5 * 60 * 1000)
+          : fallbackDelay;
         proactiveRefreshTimer = setTimeout(async () => {
-          try { await ensureAccessToken(); }
-          catch (e) { /* stays silent — user isn't interrupted, see syncNeedsReconnect */ }
-          scheduleProactiveTokenRefresh();
+          if (document.hidden) { scheduleProactiveTokenRefresh(false); return; }
+          try {
+            if (Google.accessToken || !initialBoot) await ensureAccessToken();
+          } catch (e) {
+            // Background auth failures never close the app or reopen the login overlay.
+          }
+          scheduleProactiveTokenRefresh(false);
         }, msUntilRefresh);
       }
 
@@ -3221,9 +3255,24 @@
       // this is what keeps things feeling "real time" across devices without
       // asking the user to do anything.
       document.addEventListener("visibilitychange", () => {
-        const modalOpen = document.getElementById('modal-root') && document.getElementById('modal-root').innerHTML;
-        if (!document.hidden && !modalOpen && Google.signedIn && Google.fileId) pullFromDrive().catch(() => { });
+        if (!document.hidden && Google.signedIn && Google.fileId) {
+          // Sync silently; never force a login overlay or rebuild the current view.
+          pullFromDrive().catch(() => { });
+        }
       });
+
+      // Lightweight background reconciliation. It is intentionally independent from
+      // render(), so studying never flashes or jumps because Drive is syncing.
+      let backgroundSyncTimer = null;
+      function startBackgroundSync() {
+        if (backgroundSyncTimer) clearInterval(backgroundSyncTimer);
+        backgroundSyncTimer = setInterval(() => {
+          if (!document.hidden && navigator.onLine && Google.signedIn && Google.fileId) {
+            pullFromDrive().catch(() => { });
+          }
+        }, 120000);
+      }
+      startBackgroundSync();
       window.addEventListener("online", () => {
         if (Google.signedIn && Google.fileId) syncToDriveDebounced();
       });
@@ -3751,6 +3800,42 @@
         const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/);
         return m ? m[1] : null;
       }
+
+      // Supports normal YouTube videos AND playlist links such as:
+      // https://www.youtube.com/playlist?list=PLxxxx
+      // https://www.youtube.com/watch?v=VIDEO_ID&list=PLxxxx
+      function ytPlaylistId(url = "") {
+        try {
+          const u = new URL(url);
+          if (!/(^|\.)youtube\.com$|(^|\.)youtu\.be$/.test(u.hostname)) return null;
+          const id = u.searchParams.get("list");
+          return id && /^[a-zA-Z0-9_-]{10,}$/.test(id) ? id : null;
+        } catch (e) {
+          const m = url.match(/[?&]list=([a-zA-Z0-9_-]{10,})/);
+          return m ? m[1] : null;
+        }
+      }
+
+      function isYouTubeResourceUrl(url = "") {
+        return !!ytId(url) || !!ytPlaylistId(url);
+      }
+
+      function youtubeEmbedUrl(url = "") {
+        const playlist = ytPlaylistId(url);
+        const video = ytId(url);
+        const params = new URLSearchParams({
+          rel: "0",
+          modestbranding: "1",
+          playsinline: "1",
+          enablejsapi: "1"
+        });
+        if (playlist) {
+          params.set("list", playlist);
+          if (video) params.set("v", video);
+          return `https://www.youtube.com/embed/videoseries?${params.toString()}`;
+        }
+        return video ? `https://www.youtube.com/embed/${video}?${params.toString()}` : null;
+      }
       function driveFileId(url = "") {
         const m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         return (m && url.includes("drive.google.com")) ? m[1] : null;
@@ -3772,6 +3857,7 @@
       function resourceCard(r, showModule) {
         resourceProgressDefaults(r);
         const yt = r.type === "youtube" ? ytId(r.url) : null;
+        const playlist = r.type === "youtube" ? ytPlaylistId(r.url) : null;
         const thumb = yt ? `https://img.youtube.com/vi/${yt}/mqdefault.jpg` : null;
         return `
   <div class="panel resource-card" data-open-resource="${r.id}">
@@ -3781,6 +3867,7 @@
     <div style="flex:1; min-width:0;">
       <div style="display:flex; align-items:center; gap:4px; margin-bottom:2px;">
         <span class="pill" style="background:${resourceTypeColor(r.type)}22; color:${resourceTypeColor(r.type)}; font-size:9px;">${r.type}</span>
+        ${playlist ? `<span class="pill yt-playlist-pill">Playlist</span>` : ""}
         <span class="pill" style="background:${statusColor(r.status)}22; color:${statusColor(r.status)}; font-size:9px;">${r.status}</span>
       </div>
       <h4 style="margin:0 0 2px; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(r.title)}</h4>
@@ -4518,6 +4605,7 @@
       <label class="field-label">${chosenType === 'youtube' ? 'YouTube URL' : chosenType === 'pdf' ? 'PDF URL' : chosenType === 'website' ? 'Website URL' : 'URL'}</label>
       <input class="field" id="f-url" placeholder="https://…" value="${esc(draft.url)}">
       <div id="f-url-err" style="color:var(--danger); font-size:11px; margin-top:3px; display:none;">A valid URL is required.</div>
+      ${chosenType === 'youtube' ? `<div class="yt-input-hint">Paste a video <b>or a full playlist link</b>. The playlist opens inside StudyEasy and can continue through every video.</div>` : ""}
     </div>
     ${chosenType === 'pdf' ? `
     <div class="form-row">
@@ -4593,7 +4681,12 @@
           const url = document.getElementById("f-url").value.trim();
           if (!url || !/^https?:\/\/.+/i.test(url)) { document.getElementById("f-url-err").style.display = "block"; return; }
           let title = document.getElementById("f-title").value.trim();
-          if (!title) title = chosenType === "youtube" && ytId(url) ? "YouTube Video" : url.replace(/^https?:\/\//, '').split('/')[0];
+          if (chosenType === "youtube" && !isYouTubeResourceUrl(url)) {
+            document.getElementById("f-url-err").textContent = "Paste a valid YouTube video or playlist link.";
+            document.getElementById("f-url-err").style.display = "block";
+            return;
+          }
+          if (!title) title = chosenType === "youtube" ? (ytPlaylistId(url) ? "YouTube Playlist" : "YouTube Video") : url.replace(/^https?:\/\//, '').split('/')[0];
           const description = document.getElementById("f-rdesc").value.trim();
           const tags = document.getElementById("f-tags").value.split(",").map(t => t.trim()).filter(Boolean);
           if (isEdit) {
@@ -4708,9 +4801,18 @@
         let bodyHtml = "";
         if (r.type === "youtube") {
           const vid = ytId(r.url);
-          bodyHtml = vid
-            ? `<iframe src="https://www.youtube.com/embed/${vid}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
-            : `<div class="viewer-fallback"><p>Couldn't detect a YouTube video ID.</p><a class="btn btn-primary" href="${esc(r.url)}" target="_blank" rel="noopener">Open externally</a></div>`;
+          const playlist = ytPlaylistId(r.url);
+          const embedUrl = youtubeEmbedUrl(r.url);
+          bodyHtml = embedUrl
+            ? `<div class="youtube-shell">
+                 <iframe id="youtube-resource-frame" src="${esc(embedUrl)}" title="${esc(r.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                 <div class="youtube-info-bar">
+                   <span class="yt-live-dot"></span>
+                   <span>${playlist ? "Playlist mode · choose any video from the playlist panel" : "YouTube video"}</span>
+                   ${playlist ? `<span class="yt-id-chip">${esc(playlist.slice(0, 14))}…</span>` : ""}
+                 </div>
+               </div>`
+            : `<div class="viewer-fallback"><p>Couldn't detect a YouTube video or playlist.</p><a class="btn btn-primary" href="${esc(r.url)}" target="_blank" rel="noopener">Open externally</a></div>`;
         } else if (r.type === "pdf") {
           const isDrive = !!driveFileId(r.url);
           bodyHtml = `<iframe src="${esc(toEmbeddablePdfUrl(r.url))}" title="PDF viewer"></iframe>` +
