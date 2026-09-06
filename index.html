@@ -1318,6 +1318,14 @@
     .youtube-playlist-item.active .youtube-playlist-item-title { color:#fff; }
     .youtube-playlist-item-sub { font-size:9.5px; color:rgba(255,255,255,.38); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .youtube-playlist-empty { padding:28px 16px; text-align:center; color:rgba(255,255,255,.42); font-size:11px; line-height:1.5; }
+    .youtube-playlist-setup { min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:28px 18px; }
+    .youtube-playlist-setup strong { color:rgba(255,255,255,.9); font-size:12px; }
+    .youtube-playlist-setup p { max-width:250px; margin:0; color:rgba(255,255,255,.45); font-size:10.5px; line-height:1.55; }
+    .youtube-playlist-setup-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(255,69,58,.12); color:#ff453a; border:1px solid rgba(255,69,58,.22); }
+    .youtube-playlist-setup-icon svg { width:20px; height:20px; }
+    .youtube-playlist-setup .btn { justify-content:center; min-width:170px; }
+    .youtube-playlist-help { color:rgba(255,255,255,.38); font-size:10px; text-decoration:none; }
+    .youtube-playlist-help:hover { color:#fff; text-decoration:underline; }
     .youtube-info-bar {
       min-height:34px; padding:6px 11px; display:flex; align-items:center; gap:7px; background:#111114;
       border-top:1px solid rgba(255,255,255,.09); color:rgba(255,255,255,.55); font-size:10.5px; flex-shrink:0;
@@ -3256,7 +3264,7 @@ textarea.field::placeholder {
           resources: [],
           notes: [],
           schedule: [],
-          settings: { theme: "dark", density: "comfortable", sidebarSize: "default" },
+          settings: { theme: "dark", density: "comfortable", sidebarSize: "default", youtubeApiKey: "" },
           // Epoch timestamp ensures that any remote Drive backup will correctly overwrite local empty setup on a new PC
           meta: { lastModified: new Date(0).toISOString() }
         };
@@ -4334,6 +4342,131 @@ textarea.field::placeholder {
         active?.scrollIntoView({ block: 'nearest' });
       }
 
+      function getYouTubeApiKey() {
+        const fromDb = DB?.settings?.youtubeApiKey;
+        if (fromDb) return String(fromDb).trim();
+        try { return String(localStorage.getItem("studyeasy_youtube_api_key") || "").trim(); } catch (e) { return ""; }
+      }
+
+      function saveYouTubeApiKey(value) {
+        const key = String(value || "").trim();
+        if (!DB.settings) DB.settings = {};
+        DB.settings.youtubeApiKey = key;
+        try { localStorage.setItem("studyeasy_youtube_api_key", key); } catch (e) {}
+        saveSettings(DB.settings);
+        persist();
+      }
+
+      async function fetchYouTubePlaylistItems(playlistId, apiKey) {
+        if (!playlistId || !apiKey) throw new Error("Missing YouTube Data API key");
+        const out = [];
+        let pageToken = "";
+        for (let page = 0; page < 10; page++) {
+          const url = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+          url.searchParams.set("part", "snippet,contentDetails");
+          url.searchParams.set("playlistId", playlistId);
+          url.searchParams.set("maxResults", "50");
+          url.searchParams.set("key", apiKey);
+          if (pageToken) url.searchParams.set("pageToken", pageToken);
+          const response = await fetch(url.toString(), { mode: "cors", cache: "no-store" });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || data.error) throw new Error(data?.error?.message || `YouTube API ${response.status}`);
+          for (const item of (data.items || [])) {
+            const videoId = item?.contentDetails?.videoId || item?.snippet?.resourceId?.videoId;
+            if (!videoId) continue;
+            out.push({
+              videoId,
+              title: item?.snippet?.title || `Video ${out.length + 1}`,
+              channel: item?.snippet?.videoOwnerChannelTitle || item?.snippet?.channelTitle || "YouTube",
+              thumb: item?.snippet?.thumbnails?.medium?.url || item?.snippet?.thumbnails?.default?.url || `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`
+            });
+          }
+          pageToken = data.nextPageToken || "";
+          if (!pageToken) break;
+        }
+        return out;
+      }
+
+      function localPlaylistItems(playlistId, resource) {
+        const seen = new Set();
+        const out = [];
+        for (const item of (DB?.resources || [])) {
+          if (item.type !== "youtube" || ytPlaylistId(item.url) !== playlistId) continue;
+          const videoId = ytId(item.url);
+          if (!videoId || seen.has(videoId)) continue;
+          seen.add(videoId);
+          out.push({ videoId, title: item.title || `Video ${out.length + 1}`, channel: "StudyEasy", thumb: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg` });
+        }
+        const current = ytId(resource.url);
+        if (current && !seen.has(current)) out.unshift({ videoId: current, title: resource.title || "Current video", channel: "YouTube", thumb: `https://i.ytimg.com/vi/${current}/mqdefault.jpg` });
+        return out;
+      }
+
+      function renderPlaylistSetup(root, listEl, playlistId, resource, initialVideo, reason = "") {
+        const key = getYouTubeApiKey();
+        const local = localPlaylistItems(playlistId, resource);
+        listEl.innerHTML = `
+          <div class="youtube-playlist-empty youtube-playlist-setup">
+            <div class="youtube-playlist-setup-icon">${icon('list-video')}</div>
+            <strong>Playlist list is ready to connect</strong>
+            <p>${reason ? esc(reason) : 'Your browser is blocking the YouTube playlist API.'}</p>
+            ${local.length > 1 ? `<button type="button" class="btn btn-secondary btn-sm" data-use-local-playlist>${icon('list')} Use ${local.length} StudyEasy videos</button>` : ''}
+            <button type="button" class="btn btn-primary btn-sm" data-youtube-api-setup>${icon('key-round')} Connect playlist list</button>
+            <a class="youtube-playlist-help" href="https://developers.google.com/youtube/v3/getting-started" target="_blank" rel="noopener">Get a YouTube Data API key</a>
+          </div>`;
+        renderIcons(listEl);
+        listEl.querySelector('[data-use-local-playlist]')?.addEventListener('click', () => {
+          const items = localPlaylistItems(playlistId, resource);
+          if (items.length) mountIframePlaylistQueue(root, resource, playlistId, items, initialVideo);
+        });
+        listEl.querySelector('[data-youtube-api-setup]')?.addEventListener('click', () => {
+          const entered = prompt("Paste your YouTube Data API v3 key. It is stored only in this browser.", key || "");
+          if (entered == null) return;
+          saveYouTubeApiKey(entered);
+          mountStudyEasyPlaylistPlayer(root, resource, playlistId, initialVideo);
+        });
+      }
+
+      function mountIframePlaylistQueue(root, resource, playlistId, items, initialVideo) {
+        const frame = root.querySelector('#youtube-resource-frame');
+        const listEl = root.querySelector('#youtube-playlist-items');
+        const countEl = root.querySelector('#youtube-playlist-count');
+        if (!frame || !listEl || !items?.length) return;
+        const mount = root.querySelector('#youtube-api-player');
+        if (mount) mount.style.display = 'none';
+        frame.style.display = 'block';
+        let currentIndex = Math.max(0, items.findIndex(x => x.videoId === initialVideo));
+        if (currentIndex < 0) currentIndex = 0;
+        const titleEl = root.querySelector('#youtube-current-title');
+        countEl.textContent = `${items.length} video${items.length === 1 ? '' : 's'}`;
+        const select = (index, autoplay = true) => {
+          currentIndex = Math.max(0, Math.min(items.length - 1, index));
+          const item = items[currentIndex];
+          const u = `https://www.youtube.com/watch?v=${encodeURIComponent(item.videoId)}&list=${encodeURIComponent(playlistId)}&index=${currentIndex + 1}`;
+          const embed = youtubeEmbedUrl(u);
+          if (embed) frame.src = embed;
+          if (titleEl) titleEl.textContent = item.title || `Video ${currentIndex + 1}`;
+          renderStudyEasyPlaylist(listEl, items, currentIndex, resource, i => select(i));
+        };
+        renderStudyEasyPlaylist(listEl, items, currentIndex, resource, select);
+        if (titleEl) titleEl.textContent = items[currentIndex].title || resource.title;
+        root.querySelector('[data-yt-native-action="previous"]')?.addEventListener('click', () => select(currentIndex - 1));
+        root.querySelector('[data-yt-native-action="next"]')?.addEventListener('click', () => select(currentIndex + 1));
+        root.querySelector('[data-yt-shuffle]')?.addEventListener('click', () => {
+          const current = items[currentIndex];
+          const shuffled = [...items].sort(() => Math.random() - 0.5);
+          const idx = shuffled.findIndex(x => x.videoId === current.videoId);
+          if (idx > 0) { const [first] = shuffled.splice(idx, 1); shuffled.unshift(first); }
+          items.splice(0, items.length, ...shuffled);
+          currentIndex = 0;
+          renderStudyEasyPlaylist(listEl, items, currentIndex, resource, select);
+        });
+        root.querySelector('[data-yt-repeat]')?.addEventListener('click', e => {
+          e.currentTarget.classList.toggle('active');
+          e.currentTarget.setAttribute('aria-pressed', e.currentTarget.classList.contains('active'));
+        });
+      }
+
       async function mountStudyEasyPlaylistPlayer(root, resource, playlist, initialVideo) {
         const frame = root.querySelector('#youtube-resource-frame');
         const mount = root.querySelector('#youtube-api-player');
@@ -4421,10 +4554,30 @@ textarea.field::placeholder {
             e.currentTarget.setAttribute('aria-pressed', e.currentTarget.classList.contains('active'));
           });
         } catch (error) {
-          // API unavailable: retain the official native playlist iframe.
+          // Browser extensions often block the IFrame API. Do not leave the
+          // StudyEasy sidebar stuck on "Loading". Use the Data API when a key
+          // is configured; otherwise expose a working local queue/setup panel.
           frame.style.display = 'block';
           mount.style.display = 'none';
-          listEl.innerHTML = `<div class="youtube-playlist-empty"><strong>Native YouTube playlist mode</strong><br>The enhanced StudyEasy list was blocked by the browser, so the official embedded playlist remains available in the player.</div>`;
+          const key = getYouTubeApiKey();
+          if (key) {
+            try {
+              const items = await fetchYouTubePlaylistItems(playlist, key);
+              if (items.length) {
+                mountIframePlaylistQueue(root, resource, playlist, items, initialVideo);
+                return;
+              }
+              throw new Error("The playlist contains no playable public videos.");
+            } catch (apiError) {
+              renderPlaylistSetup(root, listEl, playlist, resource, initialVideo, apiError.message || "The YouTube Data API could not read this playlist.");
+              const countEl = root.querySelector('#youtube-playlist-count');
+              if (countEl) countEl.textContent = "Needs playlist access";
+              return;
+            }
+          }
+          renderPlaylistSetup(root, listEl, playlist, resource, initialVideo, "The browser blocked YouTube's IFrame API. You can still use the official player above.");
+          const countEl = root.querySelector('#youtube-playlist-count');
+          if (countEl) countEl.textContent = "Native player active";
         }
       }
 
@@ -5050,6 +5203,18 @@ textarea.field::placeholder {
     <div class="hairline"></div>
 
     <div class="panel" style="padding:16px;">
+      <div class="eyebrow" style="margin-bottom:12px;">YouTube Playlists</div>
+      <p style="font-size:12px;color:var(--text-secondary);line-height:1.55;margin:0 0 12px;">If an ad blocker prevents the YouTube IFrame API from exposing playlist items, StudyEasy can use the official YouTube Data API to build its own playlist panel. The key stays in this browser.</p>
+      <div style="display:flex;gap:8px;align-items:center;max-width:620px;">
+        <input class="field" id="settings-youtube-api-key" type="password" autocomplete="off" placeholder="YouTube Data API v3 key" value="${esc(s.youtubeApiKey || '')}" style="flex:1;min-height:40px;">
+        <button class="btn btn-secondary" id="settings-save-youtube-key">${icon('save')} Save</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;">For best security, restrict the key in Google Cloud to your website's domain and YouTube Data API v3.</div>
+    </div>
+
+    <div class="hairline"></div>
+
+    <div class="panel" style="padding:16px;">
       <div class="eyebrow" style="margin-bottom:12px;">Google Account</div>
       ${renderGoogleSettingsHTML()}
     </div>
@@ -5647,6 +5812,12 @@ textarea.field::placeholder {
           e.stopPropagation(); openScheduleTimeDialog(el.getAttribute("data-edit-sched"));
         }));
         view.querySelectorAll("[data-theme-opt]").forEach(el => el.addEventListener("click", () => setTheme(el.getAttribute("data-theme-opt"))));
+
+        const youtubeKeyBtn = document.getElementById("settings-save-youtube-key");
+        if (youtubeKeyBtn) youtubeKeyBtn.addEventListener("click", () => {
+          saveYouTubeApiKey(document.getElementById("settings-youtube-api-key")?.value || "");
+          toast("YouTube playlist key saved");
+        });
 
         const settingsSyncBtn = document.getElementById("settings-sync-now");
         if (settingsSyncBtn) settingsSyncBtn.addEventListener("click", async () => {
