@@ -8,6 +8,7 @@
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     /* ============================================================
@@ -4262,17 +4263,169 @@ textarea.field::placeholder {
         return video ? `https://www.youtube.com/embed/${video}?${params.toString()}` : null;
       }
 
-      // We intentionally do NOT depend on the YouTube IFrame JavaScript API here.
-      // Browser extensions, GitHub Pages, privacy blockers and some network
-      // configurations can block iframe_api while the normal embedded player
-      // continues to work. Native YouTube playlist controls are much more reliable.
+      // StudyEasy playlist player: use the YouTube IFrame API only for playlist
+      // navigation/list discovery. The actual video remains inside the official
+      // YouTube iframe. If the API is blocked, we fall back to the native player.
       let activeYouTubePlayer = null;
       let activeYouTubeCleanup = null;
+      let youtubeApiPromise = null;
+
+      function waitForYouTubeApi(timeout = 9000) {
+        if (window.YT && typeof window.YT.Player === "function") return Promise.resolve(window.YT);
+        if (youtubeApiPromise) return youtubeApiPromise;
+        youtubeApiPromise = new Promise((resolve, reject) => {
+          const started = Date.now();
+          const check = () => {
+            if (window.YT && typeof window.YT.Player === "function") return resolve(window.YT);
+            if (Date.now() - started > timeout) return reject(new Error("YouTube API timeout"));
+            setTimeout(check, 120);
+          };
+          check();
+        });
+        return youtubeApiPromise;
+      }
 
       function destroyActiveYouTubePlayer() {
         try { if (typeof activeYouTubeCleanup === "function") activeYouTubeCleanup(); } catch (e) {}
+        try { if (activeYouTubePlayer && typeof activeYouTubePlayer.destroy === "function") activeYouTubePlayer.destroy(); } catch (e) {}
         activeYouTubeCleanup = null;
         activeYouTubePlayer = null;
+      }
+
+      function playlistVideoTitle(videoId, index, resource) {
+        const known = DB.resources.find(x => x.type === "youtube" && ytId(x.url) === videoId);
+        return known?.title || (videoId === ytId(resource.url) ? resource.title : `Video ${index + 1}`);
+      }
+
+      async function hydratePlaylistTitles(items, resource, listEl) {
+        const visible = items.slice(0, 60);
+        await Promise.all(visible.map(async (item, i) => {
+          const known = DB.resources.find(x => x.type === "youtube" && ytId(x.url) === item.videoId);
+          if (known) return;
+          try {
+            const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${item.videoId}`)}&format=json`, { mode: "cors" });
+            if (!response.ok) return;
+            const data = await response.json();
+            item.title = data.title || item.title;
+            const node = listEl.querySelector(`[data-yt-play-index="${i}"] .youtube-playlist-item-title`);
+            if (node) node.textContent = item.title;
+          } catch (e) {}
+        }));
+      }
+
+      function renderStudyEasyPlaylist(listEl, items, currentIndex, resource, onSelect) {
+        listEl.innerHTML = items.length ? items.map((item, i) => `
+          <button type="button" class="youtube-playlist-item ${i === currentIndex ? 'active' : ''}" data-yt-play-index="${i}">
+            <span class="youtube-playlist-thumb">
+              <img loading="lazy" src="https://i.ytimg.com/vi/${esc(item.videoId)}/mqdefault.jpg" alt="">
+              <span class="youtube-playlist-index">${i + 1}</span>
+              <span class="youtube-playlist-play"><span>${icon('play')}</span></span>
+            </span>
+            <span class="youtube-playlist-meta">
+              <span class="youtube-playlist-item-title">${esc(item.title || playlistVideoTitle(item.videoId, i, resource))}</span>
+              <span class="youtube-playlist-item-sub">${esc(item.channel || 'YouTube')}</span>
+            </span>
+          </button>`).join('') : `<div class="youtube-playlist-empty">No videos were found in this playlist.</div>`;
+        listEl.querySelectorAll('[data-yt-play-index]').forEach(btn => {
+          btn.addEventListener('click', () => onSelect(Number(btn.dataset.ytPlayIndex)));
+        });
+        renderIcons(listEl);
+        const active = listEl.querySelector('.youtube-playlist-item.active');
+        active?.scrollIntoView({ block: 'nearest' });
+      }
+
+      async function mountStudyEasyPlaylistPlayer(root, resource, playlist, initialVideo) {
+        const frame = root.querySelector('#youtube-resource-frame');
+        const mount = root.querySelector('#youtube-api-player');
+        const listEl = root.querySelector('#youtube-playlist-items');
+        const countEl = root.querySelector('#youtube-playlist-count');
+        if (!frame || !mount || !listEl) return;
+
+        // Keep the iframe visible as the first-frame fallback while the API boots.
+        try {
+          await waitForYouTubeApi();
+          const player = await new Promise((resolve, reject) => {
+            let settled = false;
+            const finish = fn => value => { if (!settled) { settled = true; fn(value); } };
+            const timer = setTimeout(finish(reject)(new Error('player timeout')), 9000);
+            new YT.Player(mount, {
+              playerVars: {
+                autoplay: 0, controls: 1, rel: 0, modestbranding: 1, playsinline: 1,
+                listType: 'playlist', list: playlist, index: ytPlaylistIndex(resource.url),
+                origin: location.origin
+              },
+              events: {
+                onReady: e => { clearTimeout(timer); finish(resolve)(e.target); },
+                onError: e => { clearTimeout(timer); if (!settled) finish(reject)(new Error(`YouTube error ${e.data}`)); }
+              }
+            });
+          });
+          activeYouTubePlayer = player;
+          frame.style.display = 'none';
+          mount.style.display = 'block';
+
+          let ids = [];
+          try { ids = player.getPlaylist() || []; } catch (e) {}
+          if (!ids.length) {
+            listEl.innerHTML = `<div class="youtube-playlist-empty">YouTube did not expose this playlist to the embedded player. The video above is still available.</div>`;
+            return;
+          }
+          const items = ids.map((videoId, i) => ({ videoId, title: playlistVideoTitle(videoId, i, resource), channel: '' }));
+          countEl.textContent = `${items.length} video${items.length === 1 ? '' : 's'}`;
+          const selectedId = player.getVideoData?.().video_id || initialVideo;
+          let currentIndex = Math.max(0, ids.indexOf(selectedId));
+          const select = (index) => {
+            currentIndex = Math.max(0, Math.min(items.length - 1, index));
+            player.loadVideoById(items[currentIndex].videoId);
+            renderStudyEasyPlaylist(listEl, items, currentIndex, resource, select);
+            const titleEl = root.querySelector('#youtube-current-title');
+            if (titleEl) titleEl.textContent = items[currentIndex].title;
+          };
+          renderStudyEasyPlaylist(listEl, items, currentIndex, resource, select);
+          if (initialVideo && initialVideo !== ids[currentIndex]) {
+            const initialIndex = ids.indexOf(initialVideo);
+            if (initialIndex >= 0) { currentIndex = initialIndex; player.loadVideoById(initialVideo); renderStudyEasyPlaylist(listEl, items, currentIndex, resource, select); }
+          }
+          hydratePlaylistTitles(items, resource, listEl);
+
+          const syncCurrent = (event) => {
+            if (event === 0) {
+              const repeatBtn = root.querySelector('[data-yt-repeat]');
+              if (repeatBtn?.classList.contains('active')) { player.playVideo(); return; }
+              if (currentIndex < items.length - 1) { select(currentIndex + 1); return; }
+            }
+            let data = {};
+            try { data = player.getVideoData?.() || {}; } catch (e) {}
+            const idx = data.video_id ? ids.indexOf(data.video_id) : currentIndex;
+            if (idx >= 0) {
+              currentIndex = idx;
+              renderStudyEasyPlaylist(listEl, items, currentIndex, resource, select);
+              const titleEl = root.querySelector('#youtube-current-title');
+              if (titleEl) titleEl.textContent = items[currentIndex].title;
+            }
+          };
+          player.addEventListener?.('onStateChange', syncCurrent);
+          activeYouTubeCleanup = () => {
+            try { player.removeEventListener?.('onStateChange', syncCurrent); } catch (e) {}
+          };
+          root.querySelector('[data-yt-native-action="previous"]')?.addEventListener('click', () => select(currentIndex - 1));
+          root.querySelector('[data-yt-native-action="next"]')?.addEventListener('click', () => select(currentIndex + 1));
+          root.querySelector('[data-yt-shuffle]')?.addEventListener('click', () => {
+            const order = [...items].sort(() => Math.random() - 0.5);
+            items.splice(0, items.length, ...order);
+            renderStudyEasyPlaylist(listEl, items, 0, resource, select);
+            select(0);
+          });
+          root.querySelector('[data-yt-repeat]')?.addEventListener('click', e => {
+            e.currentTarget.classList.toggle('active');
+            e.currentTarget.setAttribute('aria-pressed', e.currentTarget.classList.contains('active'));
+          });
+        } catch (error) {
+          // API unavailable: retain the official native playlist iframe.
+          frame.style.display = 'block';
+          mount.style.display = 'none';
+          listEl.innerHTML = `<div class="youtube-playlist-empty"><strong>Native YouTube playlist mode</strong><br>The enhanced StudyEasy list was blocked by the browser, so the official embedded playlist remains available in the player.</div>`;
+        }
       }
 
       function driveFileId(url = "") {
@@ -5248,36 +5401,28 @@ textarea.field::placeholder {
             bodyHtml = `<div class="viewer-fallback"><p>Couldn't detect a YouTube video or playlist.</p><a class="btn btn-primary" href="${esc(r.url)}" target="_blank" rel="noopener">Open externally</a></div>`;
           } else if (playlist) {
             bodyHtml = `
-      <div class="youtube-shell playlist-player native-playlist-player">
-        <div class="youtube-native-playlist-head">
-          <div class="youtube-native-playlist-brand">
-            <span class="youtube-native-playlist-icon">${icon('list-video')}</span>
-            <div class="youtube-native-playlist-copy">
-              <strong>Playlist</strong>
-              <span>All videos stay inside StudyEasy</span>
+      <div class="youtube-shell playlist-player" id="studyeasy-playlist-shell">
+        <div class="youtube-playlist-layout">
+          <div class="youtube-stage">
+            <iframe id="youtube-resource-frame" src="${esc(embedUrl)}" title="${esc(r.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            <div id="youtube-api-player" style="display:none;width:100%;height:100%;"></div>
+          </div>
+          <aside class="youtube-playlist-panel">
+            <div class="youtube-playlist-head">
+              <div class="youtube-playlist-kicker">${icon('list-video')} <span>StudyEasy Playlist</span></div>
+              <div class="youtube-playlist-title">${esc(r.title)}</div>
+              <div class="youtube-playlist-count" id="youtube-playlist-count">Loading playlist…</div>
             </div>
-            <span class="youtube-native-playlist-chip">YouTube embedded</span>
-          </div>
-        </div>
-        <div class="youtube-native-player-stage">
-          <iframe id="youtube-resource-frame"
-            src="${esc(embedUrl)}"
-            title="${esc(r.title)}"
-            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen></iframe>
-          <div class="youtube-native-help">
-            <span>${icon('mouse-pointer-click')}</span>
-            <span>Use <b>More videos / Plus de vidéos</b> inside the player to see and choose every video in this playlist.</span>
-          </div>
+            <div class="youtube-playlist-list" id="youtube-playlist-items">
+              <div class="youtube-playlist-empty"><div class="youtube-stage-spinner"></div><div style="margin-top:10px;">Loading videos…</div></div>
+            </div>
+          </aside>
         </div>
         <div class="youtube-native-controls">
           <button type="button" class="youtube-native-control" data-yt-native-action="previous">${icon('skip-back')}<span>Previous</span></button>
-          <div class="youtube-native-current">
-            <span class="yt-live-dot"></span>
-            <span>Playlist mode</span>
-            <code>${esc(playlist.slice(0, 18))}${playlist.length > 18 ? '…' : ''}</code>
-          </div>
+          <button type="button" class="youtube-native-control" data-yt-shuffle>${icon('shuffle')}<span>Shuffle</span></button>
+          <button type="button" class="youtube-native-control" data-yt-repeat aria-pressed="false">${icon('repeat')}<span>Repeat</span></button>
+          <div class="youtube-native-current"><span class="yt-live-dot"></span><span id="youtube-current-title">${esc(r.title)}</span></div>
           <button type="button" class="youtube-native-control" data-yt-native-action="next"><span>Next</span>${icon('skip-forward')}</button>
         </div>
       </div>`;
@@ -5325,30 +5470,11 @@ textarea.field::placeholder {
     </div>`;
         renderIcons(root);
 
-        // Native embedded playlist controls are used deliberately.
-        // They work even when iframe_api is blocked by an extension/network.
+        // Build a StudyEasy playlist sidebar from the same playlist exposed by
+        // the YouTube embedded player. This is the same core idea as shuffle-playlist:
+        // maintain our own queue UI while YouTube remains the playback engine.
         if (r.type === "youtube" && playlist) {
-          const frame = document.getElementById("youtube-resource-frame");
-          const previousBtn = root.querySelector('[data-yt-native-action="previous"]');
-          const nextBtn = root.querySelector('[data-yt-native-action="next"]');
-
-          // Reloading the embedded playlist with an index is a reliable fallback
-          // for Previous/Next without requiring the IFrame API.
-          let nativeIndex = ytPlaylistIndex(r.url);
-          const navigateNativePlaylist = (delta) => {
-            nativeIndex = Math.max(0, nativeIndex + delta);
-            const u = new URL("https://www.youtube.com/embed/videoseries");
-            u.searchParams.set("listType", "playlist");
-            u.searchParams.set("list", playlist);
-            u.searchParams.set("index", String(nativeIndex));
-            u.searchParams.set("rel", "0");
-            u.searchParams.set("modestbranding", "1");
-            u.searchParams.set("playsinline", "1");
-            u.searchParams.set("autoplay", "0");
-            if (frame) frame.src = u.toString();
-          };
-          previousBtn?.addEventListener("click", () => navigateNativePlaylist(-1));
-          nextBtn?.addEventListener("click", () => navigateNativePlaylist(1));
+          mountStudyEasyPlaylistPlayer(root, r, playlist, vid);
         }
 
         // ---- Automatic time-based progress tracking ----
