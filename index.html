@@ -90,23 +90,6 @@
       box-sizing: border-box;
     }
 
-    /* Icons render as inline <svg> once Lucide hydrates the <i data-lucide>
-       placeholders. Inline SVGs default to baseline alignment, which leaves a
-       few px of "phantom" space under the glyph and nudges it off-center next
-       to text/labels. Forcing block + centering here fixes icon position
-       everywhere in the app in one place, instead of per-component patches. */
-    svg {
-      display: block;
-      flex-shrink: 0;
-    }
-
-    i[data-lucide] {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 0;
-    }
-
     html,
     body {
       height: 100%;
@@ -714,42 +697,35 @@
     }
 
     .stat-card {
-      padding: 16px 18px;
+      padding: 14px 16px;
     }
 
     .stat-card .num {
-      font-size: 27px;
+      font-size: 26px;
       font-weight: 800;
       letter-spacing: -0.02em;
-      line-height: 1.1;
-      margin-top: 1px;
+      margin-top: 2px;
     }
 
     .stat-card .lbl {
       font-size: 12px;
       color: var(--text-secondary);
       font-weight: 600;
-      margin-top: 1px;
     }
 
     .stat-card .icon-wrap {
-      width: 32px;
-      height: 32px;
-      border-radius: 10px;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 10px;
-      transition: transform .2s var(--ease);
-    }
-
-    .stat-card:hover .icon-wrap {
-      transform: scale(1.08);
+      margin-bottom: 8px;
     }
 
     .stat-card .icon-wrap svg {
-      width: 16px;
-      height: 16px;
+      width: 15px;
+      height: 15px;
     }
 
     .grid-stats {
@@ -870,6 +846,21 @@
       transform: translateY(-2px);
       box-shadow: var(--shadow-card-hover);
       border-color: var(--panel-border-strong);
+    }
+
+    .module-card .icon-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .module-card .icon-badge svg {
+      width: 17px;
+      height: 17px;
     }
 
     .module-card h3 {
@@ -3486,7 +3477,59 @@
         padding: 6px 0 2px;
       }
     }
-  </style>
+  
+/* ===== StudyEasy v2 polish ===== */
+.module-detail-hero{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;gap:16px;padding:20px!important}
+.module-detail-icon{width:54px;height:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex:0 0 54px;margin:0!important}
+.module-detail-icon svg{width:24px!important;height:24px!important;stroke-width:2.1}
+.module-detail-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.module-detail-title-row .page-title{margin:0!important;line-height:1.15}
+.module-detail-badges{display:flex;gap:6px;flex-wrap:wrap}
+.module-detail-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+.module-detail-progress{max-width:560px;margin-top:14px}
+.module-detail-progress-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.module-detail-progress-pct{font-size:13px;font-weight:800;color:var(--text-primary)}
+.module-detail-tracking{display:flex;align-items:flex-start;gap:7px;margin-top:8px;color:var(--text-tertiary);font-size:10.5px;line-height:1.45}
+.module-detail-tracking svg{flex:0 0 auto;margin-top:1px}
+.module-detail-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.module-detail-stat{padding:9px 10px;border-radius:11px;background:var(--field-bg);border:1px solid var(--field-border);min-width:0}
+.module-detail-stat-label{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary);font-weight:800}
+.module-detail-stat-value{font-size:13px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dashboard-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;padding:22px!important;margin-bottom:14px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 10%,var(--panel-bg)),var(--panel-bg) 55%,color-mix(in srgb,#BF5AF2 7%,var(--panel-bg)))!important}
+.dashboard-hero-copy .page-title{margin:0 0 5px!important}
+.dashboard-hero-copy .page-sub{margin:0!important;max-width:620px}
+.dashboard-hero-progress{min-width:210px;max-width:280px}
+.dashboard-hero-progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.dashboard-hero-progress-value{font-size:22px;font-weight:850;letter-spacing:-.03em}
+.dashboard-hero-progress-label{font-size:10px;color:var(--text-tertiary);font-weight:700}
+.dashboard-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.9fr);gap:14px;align-items:start}
+.dashboard-column{display:flex;flex-direction:column;gap:14px;min-width:0}
+.dashboard-panel{padding:16px!important}
+.dashboard-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.dashboard-panel-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800}
+.dashboard-panel-title .title-icon{width:27px;height:27px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--field-bg);color:var(--text-secondary)}
+.dashboard-panel-title .title-icon svg{width:13px;height:13px}
+.dashboard-stat-card{display:grid!important;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;column-gap:10px;row-gap:2px;align-items:center;min-width:0}
+.dashboard-stat-card .icon-wrap{grid-row:1/3;width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0!important}
+.dashboard-stat-card .num{font-size:22px;line-height:1;font-weight:850;margin:0!important}
+.dashboard-stat-card .lbl{font-size:10px;line-height:1.2;margin:0!important;color:var(--text-tertiary)}
+.dashboard-today-item{display:grid;grid-template-columns:44px 30px minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px;border-radius:11px;background:var(--field-bg);border:1px solid transparent}
+.dashboard-today-item:hover{border-color:var(--field-border)}
+.dashboard-today-time{font:700 10px/1 var(--mono,monospace);color:var(--text-tertiary)}
+.dashboard-today-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+.dashboard-today-icon svg{width:13px;height:13px}
+.dashboard-today-name{min-width:0;font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dashboard-progress-list{display:flex;flex-direction:column;gap:10px}
+.dashboard-progress-item{display:grid;grid-template-columns:minmax(0,1fr) 42px;gap:8px;align-items:center}
+.dashboard-progress-name{font-size:10.5px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px}
+.dashboard-progress-pct{text-align:right;font-size:10px;font-weight:800;color:var(--text-tertiary)}
+.dashboard-progress-track{height:6px}
+.dashboard-recent-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:900px){.dashboard-layout{grid-template-columns:1fr}.dashboard-hero{grid-template-columns:1fr}.dashboard-hero-progress{max-width:none}}
+@media(max-width:620px){.module-detail-hero{grid-template-columns:auto minmax(0,1fr);gap:12px}.module-detail-actions{grid-column:1/-1;justify-content:flex-start}.module-detail-stats{grid-template-columns:1fr 1fr 1fr}.dashboard-recent-grid{grid-template-columns:1fr}.dashboard-stat-card{padding:11px!important}.dashboard-today-item{grid-template-columns:40px 28px minmax(0,1fr) auto}}
+@media(max-width:430px){.module-detail-stats{grid-template-columns:1fr}.module-detail-icon{width:48px;height:48px;flex-basis:48px}.module-detail-title-row .page-title{font-size:20px!important}}
+
+</style>
 
 <style id="forms-cards-polish">
 /* ============================================================
@@ -4411,45 +4454,53 @@ textarea.field::placeholder {
         { key: "website", label: "Website", icon: "globe" },
         { key: "link", label: "Link", icon: "link" }
       ];
-      // Fallback: how long (seconds) of focused viewing counts as "fully studied"
-      // for resource types with no measurable length of their own (websites/links).
-      // Used automatically while the resource is open and the tab is in focus.
-      const RESOURCE_TARGETS = { youtube: 480, pdf: 480, website: 300, link: 120 };
-      // Average reading pace used to turn a PDF's page count into a study-time target.
-      const SECONDS_PER_PDF_PAGE = 35;
-      // A PDF with no known page count falls back to this many "assumed" pages.
-      const DEFAULT_PDF_PAGES = 12;
-
+      // Resource progress is weighted by actual learning effort when metadata is available.
+      // The algorithm is intentionally adaptive: video duration, PDF pages, estimated reading
+      // time and language complexity all affect the resource weight. Time spent is only the
+      // fallback signal, so a 3-hour course video is never treated like a 2-minute link.
+      const RESOURCE_DEFAULTS = { youtube: 1200, pdf: 900, website: 480, link: 180 };
+      const LANGUAGE_FACTORS = {
+        native: 1, en: 1, fr: 1.08, ar: 1.12, es: 1.08, de: 1.15, it: 1.08, pt: 1.08,
+        unknown: 1.05
+      };
+      function normalizeLanguage(value='') {
+        const x=String(value||'').toLowerCase().trim();
+        if(!x) return 'unknown';
+        if(/^(en|eng|english)/.test(x)) return 'en';
+        if(/^(fr|fra|french|français)/.test(x)) return 'fr';
+        if(/^(ar|ara|arabic|العربية)/.test(x)) return 'ar';
+        if(/^(es|spa|spanish|español)/.test(x)) return 'es';
+        if(/^(de|deu|german|deutsch)/.test(x)) return 'de';
+        if(/^(it|ita|italian)/.test(x)) return 'it';
+        if(/^(pt|por|portuguese)/.test(x)) return 'pt';
+        return 'unknown';
+      }
+      function detectResourceLanguage(r) {
+        if(r.language) return normalizeLanguage(r.language);
+        const text = `${r.title||''} ${r.description||''}`.toLowerCase();
+        if(/[àâçéèêëîïôùûüÿœ]/.test(text)) return 'fr';
+        if(/[أ-ي]/.test(text)) return 'ar';
+        return 'unknown';
+      }
+      function resourceLearningTarget(r) {
+        const type=String(r?.type||'link').toLowerCase();
+        let seconds=Number(r?.targetSeconds)||0;
+        if(type==='youtube' && Number(r?.durationSec)>0) seconds=Math.max(90,Number(r.durationSec));
+        else if(type==='pdf' && Number(r?.pages)>0) seconds=Math.max(180,Number(r.pages)*150);
+        else if(type==='website' && Number(r?.wordCount)>0) seconds=Math.max(120,Number(r.wordCount)/3.2*60);
+        else if(type==='link') seconds=RESOURCE_DEFAULTS.link;
+        if(!seconds) seconds=RESOURCE_DEFAULTS[type]||300;
+        const language=detectResourceLanguage(r);
+        const factor=LANGUAGE_FACTORS[language]||1.05;
+        return Math.round(seconds*factor);
+      }
       function resourceProgressDefaults(r) {
         if (r.progress == null) r.progress = 0;
         if (!r.status) r.status = "Not Started";
         if (r.timeSpent == null) r.timeSpent = 0;
-        if (r.durationSec == null) r.durationSec = null;   // real YouTube video length, learned on first watch
-        if (r.pages == null) r.pages = null;                // PDF page count, entered by the user
-        if (r.watchedMaxSec == null) r.watchedMaxSec = 0;   // furthest point reached in a video (skip-proof)
+        r.language = r.language || detectResourceLanguage(r);
+        r.targetSeconds = resourceLearningTarget(r);
         return r;
-      }
-
-      // The "size" of a resource in seconds — real video duration, page-based
-      // reading time for PDFs, or a flat estimate for content with no inherent
-      // length. This doubles as both (a) the target used to turn time-studied
-      // into a 0–100% figure, and (b) the weight used when combining several
-      // resources into one module-level progress number, so a 40-minute video
-      // counts for more of a module's progress than a 2-minute link.
-      function estimatedTargetSeconds(r) {
-        if (r.type === "youtube") return r.durationSec || RESOURCE_TARGETS.youtube;
-        if (r.type === "pdf") return Math.round((r.pages || DEFAULT_PDF_PAGES) * SECONDS_PER_PDF_PAGE);
-        return RESOURCE_TARGETS[r.type] || 300;
-      }
-
-      // Turns raw tracking data (time spent / furthest point watched) into a
-      // 0–100 completion percentage for a single resource.
-      function computeResourcePct(r) {
-        if (r.type === "youtube" && r.durationSec) {
-          return Math.min(100, Math.round((Math.max(r.watchedMaxSec || 0, 0) / r.durationSec) * 100));
-        }
-        const target = estimatedTargetSeconds(r);
-        return Math.min(100, Math.round(((r.timeSpent || 0) / target) * 100));
       }
 
       /* ---------------- Utilities ---------------- */
@@ -4508,29 +4559,21 @@ textarea.field::placeholder {
 
       // Once a module has resources, its progress is derived automatically from how much
       // of each resource has been studied — no manual slider needed.
-      //
-      // Rather than a flat average of each resource's %, this weights every resource by
-      // its estimated size (real video length, PDF pages × reading pace, or a flat
-      // estimate for links/websites). A 45-minute video you're halfway through should
-      // move a module's overall progress more than a 2-minute link you've fully read —
-      // a plain average of percentages treats them as equally "big", which isn't real.
       function autoSyncModuleProgress(moduleId) {
         const m = getModule(moduleId); if (!m) return;
         const res = moduleResources(moduleId);
         if (!res.length) return;
         res.forEach(resourceProgressDefaults);
-        let weightedSum = 0, totalWeight = 0;
-        res.forEach(r => {
-          const weight = estimatedTargetSeconds(r);
-          weightedSum += (r.progress || 0) * weight;
-          totalWeight += weight;
-        });
-        const avg = totalWeight ? Math.round(weightedSum / totalWeight) : 0;
+        // Weighted average: effort-heavy resources contribute more than tiny links.
+        // A resource's own completion is still capped at 100 and cannot exceed its weight.
+        const totalWeight = res.reduce((sum,r)=>sum+Math.max(1,resourceLearningTarget(r)),0);
+        const score = res.reduce((sum,r)=>sum+(Math.max(0,Math.min(100,Number(r.progress)||0))*Math.max(1,resourceLearningTarget(r))),0);
+        const avg = totalWeight ? Math.round(score/totalWeight) : 0;
         const was100 = m.progress >= 100;
-        m.progress = avg;
-        if (avg >= 100) { m.status = "Completed"; if (!was100) celebrate(); }
-        else if (avg > 0) { m.status = "In Progress"; }
-        else if (m.status !== "Paused") { m.status = "Not Started"; }
+        m.progress = Math.max(0,Math.min(100,avg));
+        if (m.progress >= 100) { m.status = "Completed"; if (!was100) celebrate(); }
+        else if (m.progress > 0) m.status = "In Progress";
+        else if (m.status !== "Paused") m.status = "Not Started";
         m.updatedAt = now();
       }
 
@@ -4616,75 +4659,35 @@ textarea.field::placeholder {
 
       /* ---------------- Dashboard ---------------- */
       function renderDashboard() {
-        const total = DB.modules.length;
-        const completed = DB.modules.filter(m => m.status === "Completed").length;
-        const inProgress = DB.modules.filter(m => m.status === "In Progress").length;
-        const resCount = DB.resources.length;
-        const avgProgress = total ? Math.round(DB.modules.reduce((a, m) => a + m.progress, 0) / total) : 0;
-        const todayIdx = new Date().getDay();
-        const todayKey = DAYS[(todayIdx + 6) % 7];
-        const todayItems = DB.schedule.filter(s => s.day === todayKey).sort((a, b) => a.order - b.order);
-        const todayDone = todayItems.filter(s => s.completed).length;
-        const hour = new Date().getHours();
-        const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-        const firstName = Google.profile ? (Google.profile.given_name || (Google.profile.name || "").split(" ")[0]) : "";
-        const recentModules = [...DB.modules].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0, 4);
-
+        const total=DB.modules.length, completed=DB.modules.filter(m=>m.status==='Completed').length, inProgress=DB.modules.filter(m=>m.status==='In Progress').length;
+        const resCount=DB.resources.length;
+        DB.resources.forEach(resourceProgressDefaults);
+        DB.modules.forEach(m=>{if(moduleResources(m.id).length)autoSyncModuleProgress(m.id);});
+        const avgProgress=total?Math.round(DB.modules.reduce((a,m)=>a+(Number(m.progress)||0),0)/total):0;
+        const todayIdx=new Date().getDay(), todayKey=DAYS[(todayIdx+6)%7];
+        const todayItems=DB.schedule.filter(s=>s.day===todayKey).sort((a,b)=>a.order-b.order), todayDone=todayItems.filter(s=>s.completed).length;
+        const hour=new Date().getHours(), greeting=hour<12?'Good morning':hour<18?'Good afternoon':'Good evening';
+        const firstName=Google.profile?(Google.profile.given_name||(Google.profile.name||'').split(' ')[0]):'';
+        const recentModules=[...DB.modules].sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt)).slice(0,4);
         return `
-    <h1 class="page-title">${greeting}${firstName ? ", " + esc(firstName) : ""}</h1>
-    <p class="page-sub">Continue building your study habits.</p>
-
-    <div class="grid-stats">
-      ${statCard("layers", "Modules", total, "blue")}
-      ${statCard("check-circle-2", "Completed", completed, "green")}
-      ${statCard("loader", "In Progress", inProgress, "orange")}
-      ${statCard("library", "Resources", resCount, "purple")}
+    <div class="panel dashboard-hero">
+      <div class="dashboard-hero-copy"><h1 class="page-title">${greeting}${firstName?', '+esc(firstName):''}</h1><p class="page-sub">Your learning cockpit — see what matters, continue where you stopped, and keep your progress moving.</p></div>
+      <div class="dashboard-hero-progress"><div class="dashboard-hero-progress-top"><span class="dashboard-hero-progress-label">Overall roadmap</span><span class="dashboard-hero-progress-value">${avgProgress}%</span></div><div class="progress-track" style="height:8px"><div class="progress-fill" style="width:${avgProgress}%"></div></div></div>
     </div>
-
-    <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:14px;" class="dash-grid mb-section">
-      <div class="panel" style="padding:18px;">
-        <div class="flex-between" style="margin-bottom:14px;">
-          <div class="eyebrow">Today — ${DAY_LABEL[todayKey]}</div>
-          ${todayItems.length ? `<span style="font-size:11px;color:var(--text-tertiary);">${todayDone} / ${todayItems.length}</span>` : ""}
+    <div class="grid-stats">${statCard('layers','Modules',total,'blue')} ${statCard('check-circle-2','Completed',completed,'green')} ${statCard('loader','In Progress',inProgress,'orange')} ${statCard('library','Resources',resCount,'purple')}</div>
+    <div class="dashboard-layout mb-section">
+      <div class="dashboard-column">
+        <div class="panel dashboard-panel">
+          <div class="dashboard-panel-head"><div class="dashboard-panel-title"><span class="title-icon">${icon('calendar-days')}</span><span>Today · ${DAY_LABEL[todayKey]}</span></div>${todayItems.length?`<span style="font-size:10px;color:var(--text-tertiary);font-weight:700">${todayDone}/${todayItems.length} done</span>`:''}</div>
+          ${todayItems.length?`<div style="display:flex;flex-direction:column;gap:7px">${todayItems.map(s=>{const m=getModule(s.moduleId);if(!m)return '';const c=COLORS[m.color]||COLORS.blue;return `<div class="dashboard-today-item"><div class="dashboard-today-time">${s.startTime||'--:--'}</div><div class="dashboard-today-icon" style="background:${c}22;color:${c}">${icon(m.icon)}</div><div class="dashboard-today-name" style="${s.completed?'text-decoration:line-through;color:var(--text-tertiary)':''}">${esc(m.name)}</div><button class="icon-btn" data-toggle-sched="${s.id}" title="Toggle complete">${icon(s.completed?'rotate-ccw':'check')}</button></div>`}).join('')}</div>`:`<div style="color:var(--text-tertiary);font-size:12px;padding:10px 0">Nothing scheduled today. <a class="plain" data-nav="schedule" href="javascript:void(0)">Plan your week →</a></div>`}
         </div>
-        ${todayItems.length ? `
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            ${todayItems.map(s => {
-          const m = getModule(s.moduleId); if (!m) return "";
-          return `<div style="display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:8px; background:var(--field-bg);">
-                <div class="mono" style="font-size:10.5px; color:var(--text-tertiary); width:36px;">${s.startTime || '--:--'}</div>
-                <div class="sd-icon" style="width:22px;height:22px;border-radius:6px;background:${COLORS[m.color]}22; display:flex;align-items:center;justify-content:center;">${icon(m.icon, `style="width:11px;height:11px;color:${COLORS[m.color]}"`)}</div>
-                <div style="flex:1; font-size:12px; font-weight:600; ${s.completed ? 'text-decoration:line-through;color:var(--text-tertiary);' : ''}">${esc(m.name)}</div>
-                <button class="icon-btn" data-toggle-sched="${s.id}" title="Toggle complete">${icon(s.completed ? 'rotate-ccw' : 'check')}</button>
-              </div>`;
-        }).join("")}
-          </div>
-        ` : `<div style="color:var(--text-tertiary); font-size:12.5px; padding:12px 0;">Nothing scheduled today. <a class="plain" data-nav="schedule" href="javascript:void(0)">Plan your week →</a></div>`}
+        <div><div class="flex-between" style="margin-bottom:10px"><div class="eyebrow">Recently updated</div><span class="btn btn-ghost btn-sm" data-nav="modules">View all ${icon('arrow-right','style="width:11px;height:11px"')}</span></div><div class="dashboard-recent-grid">${recentModules.map(m=>moduleCard(m)).join('')}</div></div>
       </div>
-
-      <div class="panel" style="padding:18px;">
-        <div class="eyebrow" style="margin-bottom:14px;">Weekly Progress</div>
-        <div style="font-size:28px; font-weight:800; letter-spacing:-0.02em; margin-bottom:6px;">${avgProgress}%</div>
-        <div class="progress-track" style="margin-bottom:14px;"><div class="progress-fill" style="width:${avgProgress}%"></div></div>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          ${DB.modules.slice(0, 5).map(m => `
-            <div style="display:flex; align-items:center; gap:7px;">
-              <div style="width:6px;height:6px;border-radius:50%; background:${COLORS[m.color]}; flex-shrink:0;"></div>
-              <div style="font-size:11.5px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-secondary);">${esc(m.name)}</div>
-              <div style="font-size:11px; font-weight:700; color:var(--text-tertiary);">${m.progress}%</div>
-            </div>`).join("")}
-        </div>
+      <div class="dashboard-column">
+        <div class="panel dashboard-panel"><div class="dashboard-panel-head"><div class="dashboard-panel-title"><span class="title-icon">${icon('chart-no-axes-combined')}</span><span>Learning progress</span></div><span style="font-size:10px;color:var(--text-tertiary)">${avgProgress}% overall</span></div><div class="dashboard-progress-list">${DB.modules.slice(0,7).map(m=>{const c=COLORS[m.color]||COLORS.blue;return `<div class="dashboard-progress-item"><div><div class="dashboard-progress-name">${esc(m.name)}</div><div class="progress-track dashboard-progress-track"><div class="progress-fill" style="width:${m.progress}%;background:${c}"></div></div></div><div class="dashboard-progress-pct">${m.progress}%</div></div>`}).join('')||`<div style="font-size:11px;color:var(--text-tertiary)">Create a module to start tracking your roadmap.</div>`}</div></div>
+        <div class="panel dashboard-panel"><div class="dashboard-panel-head"><div class="dashboard-panel-title"><span class="title-icon">${icon('target')}</span><span>Study intelligence</span></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="module-detail-stat"><div class="module-detail-stat-label">Studied today</div><div class="module-detail-stat-value">${Math.round(DB.resources.reduce((a,r)=>a+(Number(r.timeSpent)||0),0)/60)} min</div></div><div class="module-detail-stat"><div class="module-detail-stat-label">Completed resources</div><div class="module-detail-stat-value">${DB.resources.filter(r=>(Number(r.progress)||0)>=100).length}</div></div></div></div>
       </div>
-    </div>
-
-    <div class="flex-between" style="margin-bottom:14px;">
-      <div class="eyebrow">Recently updated</div>
-      <span class="btn btn-ghost btn-sm" data-nav="modules">View all ${icon('arrow-right', 'style="width:11px;height:11px"')}</span>
-    </div>
-    <div class="modules-grid">
-      ${recentModules.map(m => moduleCard(m)).join("")}
-    </div>
-  `;
+    </div>`;
       }
 
       function statCard(iconName, label, value, colorKey) {
@@ -4771,51 +4774,49 @@ textarea.field::placeholder {
 
       /* ---------------- Module Detail ---------------- */
       function renderModuleDetail(id) {
-        const m = getModule(id);
-        if (!m) return emptyState("alert-triangle", "Module not found", "This module may have been deleted.", "Back to Modules", 'data-nav="modules"');
-        const color = COLORS[m.color];
-        const res = moduleResources(m.id);
-        const notes = moduleNotes(m.id);
-        const sched = moduleSchedule(m.id);
-
+        const m=getModule(id);
+        if(!m) return emptyState("alert-triangle","Module not found","This module may have been deleted.","Back to Modules",'data-nav="modules"');
+        const color=COLORS[m.color]||COLORS.blue, res=moduleResources(m.id), notes=moduleNotes(m.id), sched=moduleSchedule(m.id);
+        res.forEach(resourceProgressDefaults);
+        const completedRes=res.filter(r=>r.progress>=100).length;
+        const totalStudyMin=Math.round(res.reduce((a,r)=>a+(Number(r.timeSpent)||0),0)/60);
+        const totalTargetMin=Math.max(1,Math.round(res.reduce((a,r)=>a+resourceLearningTarget(r),0)/60));
+        const detailPct=Math.max(0,Math.min(100,Number(m.progress)||0));
         return `
-    <div class="btn btn-ghost btn-sm" data-nav="modules" style="margin-bottom:14px; width:fit-content;">${icon('arrow-left', 'style="width:12px;height:12px"')} Modules</div>
-
-    <div class="panel" style="padding:18px; margin-bottom:18px;">
-      <div style="display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap;">
-        <div class="icon-badge" style="width:48px;height:48px;border-radius:14px; background:${color}22; color:${color};">${icon(m.icon, 'style="width:22px;height:22px"')}</div>
-        <div style="flex:1; min-width:180px;">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <h1 class="page-title" style="margin-bottom:2px;">${esc(m.name)}</h1>
-            <span class="pill" style="background:${statusColor(m.status)}22; color:${statusColor(m.status)};">${m.status}</span>
-            <span class="pill" style="background:${priorityColor(m.priority)}22; color:${priorityColor(m.priority)};">${m.priority}</span>
+    <div class="btn btn-ghost btn-sm" data-nav="modules" style="margin-bottom:12px;width:fit-content;">${icon('arrow-left','style="width:12px;height:12px"')} Modules</div>
+    <div class="panel module-detail-hero" style="--module-color:${color}">
+      <div class="module-detail-icon" style="background:${color}22;color:${color}">${icon(m.icon)}</div>
+      <div style="min-width:0">
+        <div class="module-detail-title-row">
+          <h1 class="page-title">${esc(m.name)}</h1>
+          <div class="module-detail-badges">
+            <span class="pill" style="background:${statusColor(m.status)}22;color:${statusColor(m.status)}">${esc(m.status)}</span>
+            <span class="pill" style="background:${priorityColor(m.priority)}22;color:${priorityColor(m.priority)}">${esc(m.priority)}</span>
           </div>
-          <p class="page-sub" style="margin-bottom:10px;">${esc(m.description || "No description yet.")}</p>
-          <div style="display:flex; align-items:center; gap:10px; max-width:380px;">
-            <div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:${m.progress}%; background:linear-gradient(90deg, ${color}, ${color}bb);"></div></div>
-            <span style="font-size:12px; font-weight:700; color:var(--text-secondary); width:34px;">${m.progress}%</span>
-          </div>
-          ${res.length
-            ? `<div style="font-size:10.5px; color:var(--text-tertiary); margin-top:6px; display:flex; align-items:center; gap:5px; line-height:1.3;"><span style="flex:0 0 auto; display:inline-flex;">${icon('timer', 'style="width:11px;height:11px"')}</span><span>Tracked automatically — based on real video length, PDF pages, and time spent on each resource</span></div>`
-            : `<input type="range" min="0" max="100" step="5" value="${m.progress}" data-progress-slider="${m.id}" style="width:100%; max-width:380px; margin-top:6px; accent-color:${color};">`}
         </div>
-        <div style="display:flex; gap:6px;">
-          <button class="btn btn-secondary btn-sm" data-edit-module="${m.id}">${icon('pencil', 'style="width:12px;height:12px"')}</button>
-          <button class="btn btn-danger btn-sm" data-delete-module="${m.id}">${icon('trash-2', 'style="width:12px;height:12px"')}</button>
+        <p class="page-sub" style="margin:6px 0 0">${esc(m.description||"No description yet.")}</p>
+        <div class="module-detail-progress">
+          <div class="module-detail-progress-head"><span style="font-size:10px;color:var(--text-tertiary);font-weight:800;text-transform:uppercase;letter-spacing:.07em">Module progress</span><span class="module-detail-progress-pct">${detailPct}%</span></div>
+          <div class="progress-track" style="height:8px"><div class="progress-fill" style="width:${detailPct}%;background:linear-gradient(90deg,${color},${color}bb)"></div></div>
+          ${res.length ? `<div class="module-detail-tracking">${icon('sparkles','style="width:12px;height:12px;color:'+color+'"')}<span>Progress is calculated automatically from resource difficulty, video duration, PDF pages, estimated reading time, language factor, and your actual focused study time.</span></div>` : `<input type="range" min="0" max="100" step="5" value="${detailPct}" data-progress-slider="${m.id}" style="width:100%;margin-top:10px;accent-color:${color}">`}
+        </div>
+        <div class="module-detail-stats">
+          <div class="module-detail-stat"><div class="module-detail-stat-label">Resources</div><div class="module-detail-stat-value">${res.length}</div></div>
+          <div class="module-detail-stat"><div class="module-detail-stat-label">Studied</div><div class="module-detail-stat-value">${totalStudyMin} min</div></div>
+          <div class="module-detail-stat"><div class="module-detail-stat-label">Completed</div><div class="module-detail-stat-value">${completedRes}/${res.length||0}</div></div>
         </div>
       </div>
+      <div class="module-detail-actions">
+        <button class="btn btn-secondary btn-sm" data-edit-module="${m.id}" title="Edit module">${icon('pencil','style="width:12px;height:12px"')}<span class="hide-mobile">Edit</span></button>
+        <button class="btn btn-danger btn-sm" data-delete-module="${m.id}" title="Delete module">${icon('trash-2','style="width:12px;height:12px"')}<span class="hide-mobile">Delete</span></button>
+      </div>
     </div>
-
     <div class="tabs">
-      <button class="tab-btn ${State.moduleTab === 'resources' ? 'active' : ''}" data-mod-tab="resources">${icon('library')} Resources <span style="color:var(--text-tertiary); font-weight:400;">(${res.length})</span></button>
-      <button class="tab-btn ${State.moduleTab === 'notes' ? 'active' : ''}" data-mod-tab="notes">${icon('notebook-pen')} Notes <span style="color:var(--text-tertiary); font-weight:400;">(${notes.length})</span></button>
-      <button class="tab-btn ${State.moduleTab === 'schedule' ? 'active' : ''}" data-mod-tab="schedule">${icon('calendar-days')} Schedule <span style="color:var(--text-tertiary); font-weight:400;">(${sched.length})</span></button>
+      <button class="tab-btn ${State.moduleTab==='resources'?'active':''}" data-mod-tab="resources">${icon('library')} Resources <span style="color:var(--text-tertiary);font-weight:400">(${res.length})</span></button>
+      <button class="tab-btn ${State.moduleTab==='notes'?'active':''}" data-mod-tab="notes">${icon('notebook-pen')} Notes <span style="color:var(--text-tertiary);font-weight:400">(${notes.length})</span></button>
+      <button class="tab-btn ${State.moduleTab==='schedule'?'active':''}" data-mod-tab="schedule">${icon('calendar-days')} Schedule <span style="color:var(--text-tertiary);font-weight:400">(${sched.length})</span></button>
     </div>
-
-    ${State.moduleTab === 'resources' ? renderModuleResourcesTab(m, res) : ""}
-    ${State.moduleTab === 'notes' ? renderModuleNotesTab(m, notes) : ""}
-    ${State.moduleTab === 'schedule' ? renderModuleScheduleTab(m, sched) : ""}
-  `;
+    ${State.moduleTab==='resources'?renderModuleResourcesTab(m,res):State.moduleTab==='notes'?renderModuleNotesTab(m,notes):renderModuleScheduleTab(m,sched)}`;
       }
 
       function renderModuleResourcesTab(m, res) {
@@ -5138,42 +5139,6 @@ textarea.field::placeholder {
           e.currentTarget.classList.toggle('active');
           e.currentTarget.setAttribute('aria-pressed', e.currentTarget.classList.contains('active'));
         });
-      }
-
-      // For a single (non-playlist) YouTube video, swap the plain iframe for a
-      // real IFrame API player once it's ready. This is the only reliable way
-      // to know the video's true length and how far into it the person has
-      // actually watched, which is what powers the accurate progress tracking
-      // in the viewer's tick loop below. If the API fails to load (blocked,
-      // offline, etc.) the plain iframe stays visible and progress silently
-      // falls back to the flat time-based estimate.
-      async function mountSingleYouTubePlayer(root, resource, videoId) {
-        const frame = root.querySelector('#youtube-resource-frame');
-        const mount = root.querySelector('#youtube-api-player');
-        if (!frame || !mount) return;
-        try {
-          await waitForYouTubeApi();
-          const player = await new Promise((resolve, reject) => {
-            let settled = false;
-            const finish = fn => value => { if (!settled) { settled = true; fn(value); } };
-            const timer = setTimeout(() => finish(reject)(new Error('player timeout')), 9000);
-            new YT.Player(mount, {
-              videoId,
-              playerVars: { autoplay: 0, controls: 1, rel: 0, modestbranding: 1, playsinline: 1, origin: location.origin },
-              events: {
-                onReady: e => { clearTimeout(timer); finish(resolve)(e.target); },
-                onError: e => { clearTimeout(timer); if (!settled) finish(reject)(new Error(`YouTube error ${e.data}`)); }
-              }
-            });
-          });
-          activeYouTubePlayer = player;
-          frame.style.display = 'none';
-          mount.style.display = 'block';
-          const dur = player.getDuration ? player.getDuration() : 0;
-          if (dur) resource.durationSec = Math.round(dur);
-        } catch (e) {
-          // API unavailable — the iframe fallback above keeps the video playable.
-        }
       }
 
       async function mountStudyEasyPlaylistPlayer(root, resource, playlist, initialVideo) {
@@ -6186,11 +6151,6 @@ textarea.field::placeholder {
         <div id="f-pdf-upload-status" style="font-size:11px; color:var(--text-tertiary); margin-top:4px;"></div>
       ` : `<div style="font-size:12px; color:var(--text-tertiary); background:var(--field-bg); border:1px solid var(--field-border); border-radius:8px; padding:8px 10px;">Sign in with Google to upload PDFs.</div>`}
     </div>
-    <div class="form-row">
-      <label class="field-label">Page count <span style="font-weight:400; color:var(--text-tertiary);">(optional — improves auto-tracking)</span></label>
-      <input class="field" id="f-pages" type="number" min="1" step="1" placeholder="e.g. 24" value="${draft.pages || ''}">
-      <div style="font-size:10.5px; color:var(--text-tertiary); margin-top:3px;">Used to estimate how long this document takes to study, so progress reflects its real length instead of a flat guess.</div>
-    </div>
     ` : ''}
     <div class="form-row">
       <label class="field-label">Title</label>
@@ -6264,13 +6224,11 @@ textarea.field::placeholder {
           if (!title) title = chosenType === "youtube" ? (ytPlaylistId(url) ? "YouTube Playlist" : "YouTube Video") : url.replace(/^https?:\/\//, '').split('/')[0];
           const description = document.getElementById("f-rdesc").value.trim();
           const tags = document.getElementById("f-tags").value.split(",").map(t => t.trim()).filter(Boolean);
-          const pagesRaw = chosenType === "pdf" ? document.getElementById("f-pages")?.value.trim() : "";
-          const pages = pagesRaw && Number(pagesRaw) > 0 ? Math.round(Number(pagesRaw)) : (chosenType === "pdf" ? (draft.pages || null) : null);
           if (isEdit) {
-            Object.assign(r, { type: chosenType, url, title, description, tags, pages });
+            Object.assign(r, { type: chosenType, url, title, description, tags });
             toast("Resource updated");
           } else {
-            DB.resources.push({ id: uid(), moduleId, type: chosenType, url, title, description, thumbnail: "", tags, pages, createdAt: now(), progress: 0, status: "Not Started", timeSpent: 0, durationSec: null, watchedMaxSec: 0 });
+            DB.resources.push({ id: uid(), moduleId, type: chosenType, url, title, description, thumbnail: "", tags, createdAt: now(), progress: 0, status: "Not Started", timeSpent: 0 });
             toast("Resource added");
           }
           autoSyncModuleProgress(moduleId);
@@ -6417,7 +6375,6 @@ textarea.field::placeholder {
         <div class="youtube-single-content">
           <div class="youtube-single-video">
             <iframe id="youtube-resource-frame" src="${esc(embedUrl)}" title="${esc(r.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-            <div id="youtube-api-player" style="display:none;position:absolute;inset:0;width:100%;height:100%;"></div>
           </div>
           <div class="youtube-single-info">
             <div class="youtube-single-icon">${icon('youtube')}</div>
@@ -6476,29 +6433,17 @@ textarea.field::placeholder {
         // maintain our own queue UI while YouTube remains the playback engine.
         if (r.type === "youtube" && playlist) {
           mountStudyEasyPlaylistPlayer(root, r, playlist, vid);
-        } else if (r.type === "youtube" && vid) {
-          mountSingleYouTubePlayer(root, r, vid);
         }
 
-        // ---- Automatic, content-aware progress tracking ----
-        // For a single YouTube video with a live API player, progress is driven by
-        // the furthest point actually reached in the real video (skip-proof, and
-        // scaled to its true length). Everything else — PDFs (scaled by page count),
-        // websites and links — falls back to time-spent-vs-estimated-target.
+        // ---- Automatic time-based progress tracking ----
+        resourceProgressDefaults(r);
+        const target = resourceLearningTarget(r);
         const fillEl = document.getElementById("viewer-progress-fill");
         const pctEl = document.getElementById("viewer-progress-pct");
         const tick = setInterval(() => {
           if (document.hidden) return;
           r.timeSpent += 1;
-          if (r.type === "youtube" && !playlist && activeYouTubePlayer && typeof activeYouTubePlayer.getCurrentTime === "function") {
-            try {
-              const cur = activeYouTubePlayer.getCurrentTime();
-              const dur = activeYouTubePlayer.getDuration();
-              if (dur) r.durationSec = Math.round(dur);
-              if (Number.isFinite(cur)) r.watchedMaxSec = Math.max(r.watchedMaxSec || 0, cur);
-            } catch (e) { /* player mid-teardown — ignore this tick */ }
-          }
-          const pct = computeResourcePct(r);
+          const pct = Math.min(100, Math.round((r.timeSpent / target) * 100));
           if (pct !== r.progress) {
             const wasComplete = r.progress >= 100;
             r.progress = pct;
