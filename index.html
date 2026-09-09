@@ -4045,7 +4045,7 @@ textarea.field::placeholder {
             // We're already inside the app with local data — a failed silent
             // refresh just means Drive sync is paused, never kick the user
             // back out to a login screen for this.
-            Google.syncNeedsReconnect = true;
+            Google.syncNeedsReconnect = false;
             renderGoogleWidget();
           }
           if (resp.error !== "immediate_failed" && resp.error !== "user_logged_out") {
@@ -4116,21 +4116,24 @@ textarea.field::placeholder {
         Google.tokenRefreshInFlight = new Promise((resolve, reject) => {
           const client = Google.tokenClient;
           const previous = client.callback;
+          let settled = false;
           client.callback = (resp) => {
             client.callback = previous;
             Google.tokenRefreshInFlight = null;
+            if (settled) return;
+            settled = true;
             if (resp.error) {
-              // A silent refresh failure is temporary. Keep the app/session alive
-              // and let the background retry recover the Drive token automatically.
+              Google.accessToken = null;
+              Google.tokenExpiresAt = 0;
               Google.syncNeedsReconnect = false;
               renderGoogleWidget();
               reject(new Error(resp.error));
               return;
             }
-            Google.syncNeedsReconnect = false;
             Google.accessToken = resp.access_token;
             Google.tokenExpiresAt = Date.now() + ((resp.expires_in || 3600) * 1000) - 60000;
             Google.signedIn = true;
+            Google.syncNeedsReconnect = false;
             saveGoogleSession();
             renderGoogleWidget();
             resolve(Google.accessToken);
@@ -4138,8 +4141,9 @@ textarea.field::placeholder {
           try {
             client.requestAccessToken({ prompt: "none", login_hint: Google.profile?.email || undefined });
           } catch (e) {
+            client.callback = previous;
             Google.tokenRefreshInFlight = null;
-            reject(e);
+            if (!settled) { settled = true; reject(e); }
           }
         });
         return Google.tokenRefreshInFlight;
@@ -4171,26 +4175,18 @@ textarea.field::placeholder {
       }
 
       async function driveFetch(url, opts = {}) {
-        const token = await ensureAccessToken();
-        const headers = Object.assign({}, opts.headers || {}, { Authorization: `Bearer ${token}` });
-        const res = await fetch(url, Object.assign({}, opts, { headers }));
+        let token = await ensureAccessToken();
+        let headers = Object.assign({}, opts.headers || {}, { Authorization: `Bearer ${token}` });
+        let res = await fetch(url, Object.assign({}, opts, { headers }));
+        if (res.status === 401) {
+          Google.accessToken = null;
+          Google.tokenExpiresAt = 0;
+          token = await ensureAccessToken();
+          headers = Object.assign({}, opts.headers || {}, { Authorization: `Bearer ${token}` });
+          res = await fetch(url, Object.assign({}, opts, { headers }));
+        }
         if (!res.ok) {
           const txt = await res.text().catch(() => "");
-          // A stale token can happen even when the cached expiry says it is valid.
-          // Clear it and retry the exact request once through the shared silent
-          // token-refresh promise. This prevents the app from falling into login.
-          if (res.status === 401) {
-            Google.accessToken = null;
-            Google.tokenExpiresAt = 0;
-            const freshToken = await ensureAccessToken();
-            const retryHeaders = Object.assign({}, opts.headers || {}, { Authorization: `Bearer ${freshToken}` });
-            const retryRes = await fetch(url, Object.assign({}, opts, { headers: retryHeaders }));
-            if (!retryRes.ok) {
-              const retryTxt = await retryRes.text().catch(() => "");
-              throw new Error(`Drive API ${retryRes.status}: ${retryTxt}`);
-            }
-            return retryRes;
-          }
           throw new Error(`Drive API ${res.status}: ${txt}`);
         }
         return res;
@@ -4227,18 +4223,25 @@ textarea.field::placeholder {
 
       async function ensureDriveFile() {
         const folderId = await ensureDriveFolder();
+        if (Google.fileId) {
+          try {
+            const check = await driveFetch(`https://www.googleapis.com/drive/v3/files/${Google.fileId}?fields=id,name,parents,trashed`);
+            const info = await check.json();
+            if (info.trashed || !(info.parents || []).includes(folderId)) Google.fileId = null;
+          } catch (e) {
+            if (/Drive API 404/.test(String(e))) Google.fileId = null;
+            else throw e;
+          }
+        }
         if (!Google.fileId) {
-          const q = `name='${GDRIVE_DATA_FILE}' and '${folderId}' in parents and trashed=false`;
-          const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`);
+          const q = `name='${GDRIVE_DATA_FILE.replace(/'/g, "\'")}' and '${folderId}' in parents and trashed=false`;
+          const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,modifiedTime)`);
           const data = await res.json();
           if (data.files && data.files.length) Google.fileId = data.files[0].id;
         }
-        if (Google.fileId) {
-          await pullFromDrive();
-        } else {
-          await pushToDrive(true);
-          toast("Backed up to Google Drive");
-        }
+        saveGoogleSession();
+        if (Google.fileId) await pullFromDrive();
+        else { await pushToDrive(true); toast("Backed up to Google Drive"); }
         Google.lastSynced = new Date().toISOString();
         saveGoogleSession();
       }
@@ -4294,25 +4297,19 @@ textarea.field::placeholder {
       }
 
       const syncToDriveDebounced = debounce(async () => {
-        if (!Google.signedIn || !Google.fileId || !Google.tokenClient || !DB || !navigator.onLine) return;
-        if (Google.syncInFlight) {
-          Google.syncPending = true;
-          return;
-        }
-
-        Google.syncInFlight = true;
+        if (!Google.signedIn || !Google.tokenClient || !DB || !navigator.onLine) return;
         Google.syncPending = true;
         renderGoogleWidget();
-
+        if (Google.syncInFlight) return;
+        Google.syncInFlight = true;
         try {
           await ensureAccessToken();
-          await pushToDrive(false);
-          Google.syncNeedsReconnect = false;
+          await ensureDriveFile();
           Google.syncPending = false;
+          Google.syncNeedsReconnect = false;
           Google.lastSynced = new Date().toISOString();
           saveGoogleSession();
         } catch (e) {
-          // Never log the user out. Keep the local change and retry automatically.
           console.warn("Drive background sync delayed:", e);
           Google.syncPending = true;
           retryDriveSyncSoon(5000);
@@ -4326,24 +4323,17 @@ textarea.field::placeholder {
       let driveRetryTimer = null;
       function retryDriveSyncSoon(delay = 5000) {
         if (driveRetryTimer) return;
-        driveRetryTimer = setTimeout(async () => {
+        driveRetryTimer = setTimeout(() => {
           driveRetryTimer = null;
-          if (!Google.signedIn || !Google.fileId || !Google.tokenClient || !DB || !navigator.onLine) return;
-          try {
-            // Always try silent token recovery. Do not require logout/login.
-            await ensureAccessToken();
-            await syncToDriveDebounced();
-          } catch (e) {
-            // Keep retrying while the app is open and online.
-            retryDriveSyncSoon(10000);
-          }
+          if (Google.signedIn && Google.tokenClient && DB && navigator.onLine) syncToDriveDebounced();
         }, delay);
       }
 
-      // Catch up the moment the tab regains focus or the network comes back.
-      // This never shows the login overlay and never reloads/rebuilds the app.
+      // Catch up the moment the tab regains focus or the network comes back —
+      // this is what keeps things feeling "real time" across devices without
+      // asking the user to do anything.
       document.addEventListener("visibilitychange", () => {
-        if (!document.hidden && Google.signedIn && Google.fileId && navigator.onLine) {
+        if (!document.hidden && navigator.onLine && Google.signedIn && Google.fileId && DB) {
           ensureAccessToken()
             .then(() => pullFromDrive())
             .then(() => { if (Google.syncPending) syncToDriveDebounced(); })
@@ -4351,8 +4341,6 @@ textarea.field::placeholder {
         }
       });
 
-      // Frequent lightweight reconciliation while the app is open.
-      // Local changes are pushed; remote changes are pulled only when remote is newer.
       let backgroundSyncTimer = null;
       function startBackgroundSync() {
         if (backgroundSyncTimer) clearInterval(backgroundSyncTimer);
@@ -4370,16 +4358,16 @@ textarea.field::placeholder {
       startBackgroundSync();
 
       window.addEventListener("online", () => {
-        if (Google.signedIn && Google.fileId) {
+        if (Google.signedIn && Google.tokenClient && DB) {
           ensureAccessToken()
-            .then(() => pullFromDrive())
+            .then(() => Google.fileId ? pullFromDrive() : ensureDriveFile())
             .then(() => syncToDriveDebounced())
             .catch(() => retryDriveSyncSoon(1000));
         }
       });
 
       window.addEventListener("focus", () => {
-        if (!document.hidden && navigator.onLine && Google.signedIn && Google.fileId) {
+        if (!document.hidden && navigator.onLine && Google.signedIn && Google.fileId && DB) {
           ensureAccessToken().then(() => pullFromDrive()).catch(() => retryDriveSyncSoon(1000));
         }
       });
@@ -4413,6 +4401,9 @@ textarea.field::placeholder {
         } catch (e) { }
         if (proactiveRefreshTimer) { clearTimeout(proactiveRefreshTimer); proactiveRefreshTimer = null; }
         if (driveRetryTimer) { clearTimeout(driveRetryTimer); driveRetryTimer = null; }
+        Google.syncPending = false;
+        Google.syncInFlight = false;
+        Google.tokenRefreshInFlight = null;
         clearGoogleSession();
 
         // Clean up user data from this device to enforce safety/isolation
@@ -4436,12 +4427,10 @@ textarea.field::placeholder {
         const el = document.getElementById("google-account");
         if (!el) return;
         if (Google.profile) {
-          const statusDot = Google.syncNeedsReconnect ? "ga-dot-warn" : (Google.syncPending ? "ga-dot-busy" : "ga-dot-ok");
+          const statusDot = Google.syncPending ? "ga-dot-busy" : "ga-dot-ok";
           const statusLine = Google.syncPending
-            ? `<div class="ga-menu-sub">Syncing automatically…</div>`
-            :
-              ? `<div class="ga-menu-sub">Syncing…</div>`
-              : `<div class="ga-menu-sub">${Google.lastSynced ? "Synced " + fmtDate(Google.lastSynced) : "Not yet synced"}</div>`;
+            ? `<div class="ga-menu-sub">Syncing…</div>`
+            : `<div class="ga-menu-sub">${Google.lastSynced ? "Synced " + fmtDate(Google.lastSynced) : "Automatic sync ready"}</div>`;
           el.innerHTML = `
       <div class="ga-user" id="ga-user-btn">
         ${Google.profile.picture ? `<img class="ga-avatar" src="${esc(Google.profile.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'">` : ""}
@@ -4454,9 +4443,7 @@ textarea.field::placeholder {
           <div class="ga-menu-name">${esc(Google.profile.name || "")}</div>
           <div class="ga-menu-email">${esc(Google.profile.email || "")}</div>
         </div>
-        ${Google.syncNeedsReconnect
-              ? `<div class="ga-menu-item ga-menu-warn" id="ga-sync-now">${icon("refresh-cw", 'style="width:13px;height:13px"')}<span>Reconnect</span></div>`
-              : `<div class="ga-menu-item" id="ga-sync-now">${icon("refresh-cw", 'style="width:13px;height:13px"')}<span>Sync now</span></div>`}
+        <div class="ga-menu-item" id="ga-sync-now">${icon("refresh-cw", 'style="width:13px;height:13px"')}<span>Sync now</span></div>
         ${statusLine}
         <div class="ga-menu-item ga-menu-danger" id="ga-signout">${icon("log-out", 'style="width:13px;height:13px"')}<span>Sign out</span></div>
       </div>
@@ -4480,8 +4467,6 @@ textarea.field::placeholder {
             await ensureAccessToken();
             await ensureDriveFile();
             await pullFromDrive();
-            if (DB) await pushToDrive(false);
-            Google.syncPending = false;
             toast("Synced");
           }
           catch (err) { console.error(err); toast("Sync failed — will retry automatically", "error"); }
