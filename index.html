@@ -787,61 +787,6 @@
       height: 100%;
     }
 
-    .module-card-top {
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-      min-height:42px;
-      margin-bottom:10px;
-    }
-    .module-card-identity {
-      display:flex;
-      align-items:center;
-      gap:7px;
-      min-width:0;
-    }
-    .module-card .icon-badge {
-      width:42px;
-      height:42px;
-      border-radius:12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex:0 0 42px;
-      margin:0;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 6px 16px rgba(0,0,0,.08);
-    }
-    .module-card .icon-badge svg { width:19px; height:19px; }
-    .module-priority {
-      display:inline-flex;
-      align-items:center;
-      gap:4px;
-      min-height:22px;
-      padding:3px 7px;
-      border-radius:999px;
-      background:rgba(255,159,10,.11);
-      border:1px solid rgba(255,159,10,.20);
-      color:#FF9F0A;
-      font-size:9px;
-      font-weight:800;
-      white-space:nowrap;
-    }
-    .module-priority svg { width:11px; height:11px; }
-    .module-card .module-actions {
-      position:static;
-      display:flex;
-      gap:4px;
-      opacity:1;
-      flex:0 0 auto;
-    }
-    .module-card .module-actions .icon-btn { opacity:0; width:30px; height:30px; }
-    .module-card:hover .module-actions .icon-btn,
-    .module-card:focus-within .module-actions .icon-btn { opacity:1; }
-    @media (hover:none) {
-      .module-card .module-actions .icon-btn { opacity:1; }
-    }
-
     .module-card:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-card-hover);
@@ -1073,10 +1018,6 @@
         filter: brightness(1.1);
       }
     }
-
-    /* Module header owns icon/action positioning; priority no longer floats over actions. */
-    .module-card.on-fire { animation:none; }
-    .module-card.on-fire .glow { animation:none; }
 
     @media (prefers-reduced-motion: reduce) {
 
@@ -2720,7 +2661,7 @@
     /* ---------- Premium resource cards ---------- */
     .resource-card {
       display:grid;
-      grid-template-columns:176px minmax(0,1fr) auto;
+      grid-template-columns:148px minmax(0,1fr) auto;
       gap:14px;
       padding:10px;
       align-items:center;
@@ -2768,8 +2709,8 @@
     }
 
     .res-thumb {
-      width:176px;
-      height:100px;
+      width:148px;
+      height:88px;
       border-radius:14px;
       overflow:hidden;
       position:relative;
@@ -2813,12 +2754,6 @@
     .res-thumb-image.is-broken {
       opacity:0;
     }
-    .res-thumb.has-real-preview .res-preview-fallback { opacity:0; visibility:hidden; }
-    .res-thumb-image { z-index:2; }
-    .res-thumb-shade { z-index:3; }
-    .res-thumb-topline, .res-play-hint, .res-thumb-label { z-index:4; }
-    .res-thumb-playlist .res-thumb-image { object-position:center; }
-    .res-thumb-playlist .res-thumb-overlay { color:#ff6b63; }
 
     .resource-card:hover .res-thumb-image:not(.is-broken) {
       transform:scale(1.055);
@@ -3890,9 +3825,7 @@ textarea.field::placeholder {
         ready: false,
         lastSynced: null,
         syncNeedsReconnect: false,
-        syncPending: false,
-        syncInFlight: false,
-        tokenRefreshInFlight: null
+        syncPending: false
       };
 
       function loadGoogleSession() {
@@ -3960,7 +3893,7 @@ textarea.field::placeholder {
           scheduleProactiveTokenRefresh(true);
           setTimeout(() => {
             if (!document.hidden && Google.signedIn && Google.tokenClient && !Google.accessToken) {
-              try { Google.tokenClient.requestAccessToken({ prompt: "none", login_hint: Google.profile.email || undefined }); } catch (e) { }
+              try { Google.tokenClient.requestAccessToken({ prompt: "", login_hint: Google.profile.email || undefined }); } catch (e) { }
             }
           }, 3500);
 
@@ -4033,7 +3966,6 @@ textarea.field::placeholder {
             toast(`Signed in as ${Google.profile.given_name || Google.profile.name}`);
           } else {
             renderGoogleWidget(); // Update UI if we were already in background mode
-            if (Google.fileId && DB) syncToDriveDebounced();
           }
         } catch (e) {
           console.error("Google Drive setup failed", e);
@@ -4057,38 +3989,28 @@ textarea.field::placeholder {
       }
 
       function ensureAccessToken() {
-        if (Google.accessToken && Date.now() < Google.tokenExpiresAt) return Promise.resolve(Google.accessToken);
-        if (!Google.tokenClient) return Promise.reject(new Error("Google sign-in not ready"));
-        if (Google.tokenRefreshInFlight) return Google.tokenRefreshInFlight;
-
-        Google.tokenRefreshInFlight = new Promise((resolve, reject) => {
-          const client = Google.tokenClient;
-          const previous = client.callback;
-          client.callback = (resp) => {
-            client.callback = previous;
-            Google.tokenRefreshInFlight = null;
+        return new Promise((resolve, reject) => {
+          if (Google.accessToken && Date.now() < Google.tokenExpiresAt) { resolve(Google.accessToken); return; }
+          if (!Google.tokenClient) { reject(new Error("Google sign-in not ready")); return; }
+          const prevCallback = Google.tokenClient.callback;
+          Google.tokenClient.callback = (resp) => {
+            Google.tokenClient.callback = prevCallback;
             if (resp.error) {
               Google.syncNeedsReconnect = true;
               renderGoogleWidget();
-              reject(new Error(resp.error));
+              reject(resp);
               return;
             }
             Google.syncNeedsReconnect = false;
             Google.accessToken = resp.access_token;
             Google.tokenExpiresAt = Date.now() + ((resp.expires_in || 3600) * 1000) - 60000;
-            Google.signedIn = true;
-            saveGoogleSession();
-            renderGoogleWidget();
             resolve(Google.accessToken);
           };
-          try {
-            client.requestAccessToken({ prompt: "none", login_hint: Google.profile?.email || undefined });
-          } catch (e) {
-            Google.tokenRefreshInFlight = null;
-            reject(e);
-          }
+          // prompt:"" = silent refresh. login_hint tells Google exactly which
+          // account we mean so it can skip the account-chooser step if it does
+          // need to briefly reconfirm the session.
+          Google.tokenClient.requestAccessToken({ prompt: "", login_hint: Google.profile ? Google.profile.email : undefined });
         });
-        return Google.tokenRefreshInFlight;
       }
 
       // Refresh the access token a few minutes before it actually expires,
@@ -4224,12 +4146,11 @@ textarea.field::placeholder {
         saveGoogleSession();
       }
 
-      const syncToDriveDebounced = debounce(async () => {
+      const syncToDriveDebounced = debounce(() => {
         if (Google.signedIn && Google.fileId && Google.tokenClient) {
           Google.syncPending = true;
           renderGoogleWidget();
-          ensureAccessToken()
-            .then(() => pushToDrive(false))
+          pushToDrive(false)
             .then(() => { Google.syncPending = false; renderGoogleWidget(); })
             .catch(e => {
               // Never interrupt the user for this — their edit is already safe
@@ -4251,7 +4172,7 @@ textarea.field::placeholder {
           if (Google.signedIn && Google.fileId && Google.tokenClient && !Google.syncNeedsReconnect) {
             syncToDriveDebounced();
           }
-        }, 15000);
+        }, 60000);
       }
 
       // Catch up the moment the tab regains focus or the network comes back —
@@ -4260,7 +4181,7 @@ textarea.field::placeholder {
       document.addEventListener("visibilitychange", () => {
         if (!document.hidden && Google.signedIn && Google.fileId) {
           // Sync silently; never force a login overlay or rebuild the current view.
-          ensureAccessToken().then(() => pullFromDrive()).catch(() => { });
+          pullFromDrive().catch(() => { });
         }
       });
 
@@ -4273,7 +4194,7 @@ textarea.field::placeholder {
           if (!document.hidden && navigator.onLine && Google.signedIn && Google.fileId) {
             pullFromDrive().catch(() => { });
           }
-        }, 60000);
+        }, 120000);
       }
       startBackgroundSync();
       window.addEventListener("online", () => {
@@ -4402,14 +4323,118 @@ textarea.field::placeholder {
         { key: "website", label: "Website", icon: "globe" },
         { key: "link", label: "Link", icon: "link" }
       ];
-      // How long (seconds) of focused viewing counts as "fully studied" per resource type.
-      // Progress ticks up in real time while the resource is open and the tab is in focus.
+      // Fallback: how long (seconds) of focused viewing counts as "fully studied" per
+      // resource type, used only when we can't determine the resource's *real* length
+      // (see ensureResourceTarget below). Progress ticks up in real time while the
+      // resource is open and the tab is in focus.
       const RESOURCE_TARGETS = { youtube: 480, pdf: 480, website: 300, link: 120 };
+      // Average focused-reading pace for study material, used to turn a PDF's real
+      // page count into a study-time target (~0.8–1.5 min/page is typical for technical
+      // reading; 75s is a reasonable midpoint).
+      const SECONDS_PER_PDF_PAGE = 75;
+      const MIN_TARGET_SECONDS = 30;
+      const MAX_TARGET_SECONDS = 3 * 3600; // cap so a huge doc/video doesn't need hours to tick
       function resourceProgressDefaults(r) {
         if (r.progress == null) r.progress = 0;
         if (!r.status) r.status = "Not Started";
         if (r.timeSpent == null) r.timeSpent = 0;
+        if (r.targetSeconds === undefined) r.targetSeconds = null;
         return r;
+      }
+      // The number of seconds this specific resource represents right now: the real
+      // video duration or real PDF page count once known (see ensureResourceTarget),
+      // otherwise the generic per-type fallback above.
+      function getResourceTargetSeconds(r) {
+        return r.targetSeconds || RESOURCE_TARGETS[r.type] || 300;
+      }
+      // Small human-readable hint of what the progress % is actually measured against —
+      // the real video length, the real page count, or nothing yet (still looking it up).
+      function resourceLengthLabel(r) {
+        if (r.type === "pdf" && r.pageCount) return `${r.pageCount} page${r.pageCount === 1 ? '' : 's'}`;
+        if (r.type === "youtube" && r.targetSeconds) {
+          const mins = Math.round(r.targetSeconds / 60);
+          return mins >= 1 ? `~${mins} min` : `${r.targetSeconds}s`;
+        }
+        return "";
+      }
+      function clampTargetSeconds(s) {
+        return Math.max(MIN_TARGET_SECONDS, Math.min(MAX_TARGET_SECONDS, Math.round(s)));
+      }
+      function iso8601DurationToSeconds(iso) {
+        const m = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/.exec(iso || "");
+        if (!m) return null;
+        const h = parseFloat(m[1] || 0), mi = parseFloat(m[2] || 0), s = parseFloat(m[3] || 0);
+        const total = h * 3600 + mi * 60 + s;
+        return total > 0 ? total : null;
+      }
+      const _ytDurationCache = {};
+      // Looks up the video's real length via the YouTube Data API (the same key
+      // already used for playlists), so progress reflects "% of this video watched"
+      // instead of a flat guess.
+      async function fetchYouTubeDurationSeconds(videoId) {
+        if (!videoId) return null;
+        if (videoId in _ytDurationCache) return _ytDurationCache[videoId];
+        const key = getYouTubeApiKey();
+        if (!key) return (_ytDurationCache[videoId] = null);
+        try {
+          const url = new URL("https://www.googleapis.com/youtube/v3/videos");
+          url.searchParams.set("part", "contentDetails");
+          url.searchParams.set("id", videoId);
+          url.searchParams.set("key", key);
+          const response = await fetch(url.toString(), { mode: "cors", cache: "no-store" });
+          const data = await response.json().catch(() => ({}));
+          const seconds = iso8601DurationToSeconds(data?.items?.[0]?.contentDetails?.duration);
+          return (_ytDurationCache[videoId] = seconds);
+        } catch (e) {
+          return (_ytDurationCache[videoId] = null);
+        }
+      }
+      let _pdfjsLoadPromise = null;
+      function loadPdfJs() {
+        if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+        if (_pdfjsLoadPromise) return _pdfjsLoadPromise;
+        _pdfjsLoadPromise = new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js";
+          s.onload = () => {
+            try {
+              window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+              resolve(window.pdfjsLib);
+            } catch (e) { reject(e); }
+          };
+          s.onerror = () => reject(new Error("Could not load pdf.js"));
+          document.head.appendChild(s);
+        });
+        return _pdfjsLoadPromise;
+      }
+      // Best-effort real page count for a PDF. Works for directly-hosted PDFs that
+      // allow cross-origin fetches; gracefully fails (falls back to the generic
+      // per-type default) for Drive preview links or anything CORS-blocked — a study
+      // tracker should never break the viewer just to estimate a number.
+      async function fetchPdfPageCount(url) {
+        try {
+          const pdfjsLib = await loadPdfJs();
+          const doc = await pdfjsLib.getDocument({ url, withCredentials: false }).promise;
+          return doc.numPages || null;
+        } catch (e) {
+          return null;
+        }
+      }
+      // Determines (and caches on the resource) how much real study time this
+      // resource represents: the actual video duration, or an estimate from the
+      // actual PDF page count — instead of one flat number per resource type.
+      // Falls back to the type default whenever the real figure isn't available.
+      async function ensureResourceTarget(r) {
+        if (r.targetSeconds) return r.targetSeconds;
+        let seconds = null;
+        if (r.type === "youtube") {
+          seconds = await fetchYouTubeDurationSeconds(ytId(r.url));
+        } else if (r.type === "pdf") {
+          const pages = await fetchPdfPageCount(r.url);
+          if (pages) { r.pageCount = pages; seconds = pages * SECONDS_PER_PDF_PAGE; }
+        }
+        r.targetSeconds = clampTargetSeconds(seconds || RESOURCE_TARGETS[r.type] || 300);
+        return r.targetSeconds;
       }
 
       /* ---------------- Utilities ---------------- */
@@ -4429,14 +4454,7 @@ textarea.field::placeholder {
         setTimeout(() => { el.style.transition = "opacity .2s ease, transform .2s ease"; el.style.opacity = "0"; el.style.transform = "translateY(6px)"; setTimeout(() => el.remove(), 200); }, 2600);
       }
 
-      // Lucide does not ship the YouTube brand mark. Keep it inline so the
-      // resource icon never disappears when the Lucide set changes/doesn't contain it.
-      function icon(name, attrs = "") {
-        if (name === "youtube") {
-          return `<svg ${attrs} viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.51A3.02 3.02 0 0 0 .5 6.2 31.2 31.2 0 0 0 0 12a31.2 31.2 0 0 0 .5 5.8 3.02 3.02 0 0 0 2.12 2.14c1.88.51 9.38.51 9.38.51s7.5 0 9.38-.51a3.02 3.02 0 0 0 2.12-2.14A31.2 31.2 0 0 0 24 12a31.2 31.2 0 0 0-.5-5.8ZM9.55 15.6V8.4L15.8 12l-6.25 3.6Z"/></svg>`;
-        }
-        return `<i data-lucide="${name}" ${attrs}></i>`;
-      }
+      function icon(name, attrs = "") { return `<i data-lucide="${name}" ${attrs}></i>`; }
       function renderIcons(container) { lucide.createIcons({ nodes: container ? [container] : undefined }); }
 
       /* ---------------- State ---------------- */
@@ -4467,13 +4485,22 @@ textarea.field::placeholder {
       function celebrate() { toast("Module completed 🎉", "success"); }
 
       // Once a module has resources, its progress is derived automatically from how much
-      // of each resource has been studied — no manual slider needed.
+      // of each resource has been studied — no manual slider needed. Each resource is
+      // weighted by how much study time it actually represents (real video duration,
+      // estimated PDF reading time from its real page count, etc.) rather than counted
+      // equally, so a 40-minute video moves the module further than a 2-minute link.
       function autoSyncModuleProgress(moduleId) {
         const m = getModule(moduleId); if (!m) return;
         const res = moduleResources(moduleId);
         if (!res.length) return;
         res.forEach(resourceProgressDefaults);
-        const avg = Math.round(res.reduce((a, r) => a + (r.progress || 0), 0) / res.length);
+        let totalWeight = 0, weightedSum = 0;
+        res.forEach(r => {
+          const w = getResourceTargetSeconds(r);
+          totalWeight += w;
+          weightedSum += w * (r.progress || 0);
+        });
+        const avg = totalWeight ? Math.round(weightedSum / totalWeight) : 0;
         const was100 = m.progress >= 100;
         m.progress = avg;
         if (avg >= 100) { m.status = "Completed"; if (!was100) celebrate(); }
@@ -4555,7 +4582,6 @@ textarea.field::placeholder {
         }
         renderIcons(view);
         attachViewHandlers();
-        hydrateResourceThumbnails(view);
         if (State.route === "schedule") initScheduleDnD();
         view.classList.remove("fade-in");
         void view.offsetWidth;
@@ -4636,8 +4662,9 @@ textarea.field::placeholder {
       }
 
       function statCard(iconName, label, value, colorKey) {
-        return `<div class="panel stat-card">
-    <div class="icon-wrap" style="background:${COLORS[colorKey]}1f; color:${COLORS[colorKey]}">${icon(iconName)}</div>
+        const c = COLORS[colorKey];
+        return `<div class="panel stat-card" style="border-left:3px solid ${c};">
+    <div class="icon-wrap" style="background:${c}1f; color:${c}">${icon(iconName)}</div>
     <div class="num">${value}</div>
     <div class="lbl">${label}</div>
   </div>`;
@@ -4678,17 +4705,13 @@ textarea.field::placeholder {
         const isImportant = (m.priority === "High" || m.priority === "Critical") && m.status !== "Completed";
         return `
   <div class="panel module-card ${isImportant ? 'on-fire' : ''}" data-open-module="${m.id}">
-    <div class="module-card-top">
-      <div class="module-card-identity">
-        <div class="icon-badge" style="background:${color}22; color:${color};">${icon(m.icon)}</div>
-        ${isImportant ? `<span class="module-priority" title="${m.priority} priority">${icon('flame')} ${esc(m.priority)}</span>` : ""}
-      </div>
-      <div class="module-actions">
-        <button class="icon-btn" data-open-module="${m.id}" title="Open">${icon('arrow-up-right')}</button>
-        <button class="icon-btn" data-edit-module="${m.id}" title="Edit">${icon('pencil')}</button>
-        <button class="icon-btn" data-delete-module="${m.id}" title="Delete">${icon('trash-2')}</button>
-      </div>
+    ${isImportant ? `<div class="fire-badge" title="${m.priority} priority — active focus">${icon('flame')}</div>` : ""}
+    <div class="module-actions">
+      <button class="icon-btn" data-open-module="${m.id}" title="Open">${icon('arrow-up-right')}</button>
+      <button class="icon-btn" data-edit-module="${m.id}" title="Edit">${icon('pencil')}</button>
+      <button class="icon-btn" data-delete-module="${m.id}" title="Delete">${icon('trash-2')}</button>
     </div>
+    <div class="icon-badge" style="background:${color}22; color:${color};">${icon(m.icon)}</div>
     <h3>${esc(m.name)}</h3>
     <p class="desc">${esc(m.description || "No description yet.")}</p>
     <div style="font-size:10.5px; font-weight:700; color:var(--text-tertiary); margin-bottom:4px;">${m.progress}% Complete</div>
@@ -4729,9 +4752,13 @@ textarea.field::placeholder {
         return `
     <div class="btn btn-ghost btn-sm" data-nav="modules" style="margin-bottom:14px; width:fit-content;">${icon('arrow-left', 'style="width:12px;height:12px"')} Modules</div>
 
-    <div class="panel" style="padding:18px; margin-bottom:18px;">
-      <div style="display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap;">
-        <div class="icon-badge" style="width:48px;height:48px;border-radius:14px; background:${color}22; color:${color};">${icon(m.icon, 'style="width:22px;height:22px"')}</div>
+    <div class="panel" style="padding:18px; margin-bottom:18px; position:relative;">
+      <div style="position:absolute; top:16px; right:16px; display:flex; gap:6px; z-index:1;">
+        <button class="btn btn-secondary btn-sm" data-edit-module="${m.id}">${icon('pencil', 'style="width:12px;height:12px"')}</button>
+        <button class="btn btn-danger btn-sm" data-delete-module="${m.id}">${icon('trash-2', 'style="width:12px;height:12px"')}</button>
+      </div>
+      <div style="display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; padding-right:76px;">
+        <div class="icon-badge" style="width:48px;height:48px;border-radius:14px; background:${color}22; color:${color}; flex-shrink:0;">${icon(m.icon, 'style="width:22px;height:22px"')}</div>
         <div style="flex:1; min-width:180px;">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <h1 class="page-title" style="margin-bottom:2px;">${esc(m.name)}</h1>
@@ -4741,15 +4768,11 @@ textarea.field::placeholder {
           <p class="page-sub" style="margin-bottom:10px;">${esc(m.description || "No description yet.")}</p>
           <div style="display:flex; align-items:center; gap:10px; max-width:380px;">
             <div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:${m.progress}%; background:linear-gradient(90deg, ${color}, ${color}bb);"></div></div>
-            <span style="font-size:12px; font-weight:700; color:var(--text-secondary); width:34px;">${m.progress}%</span>
+            <span style="font-size:12px; font-weight:700; color:var(--text-secondary); width:34px; text-align:right;">${m.progress}%</span>
           </div>
           ${res.length
-            ? `<div style="font-size:10.5px; color:var(--text-tertiary); margin-top:6px; display:flex; align-items:center; gap:4px;">${icon('timer', 'style="width:11px;height:11px"')} Tracked automatically as you study the resources below</div>`
+            ? `<div style="font-size:10.5px; line-height:1.45; color:var(--text-tertiary); margin-top:6px; max-width:380px; display:flex; align-items:flex-start; gap:5px;"><span style="flex-shrink:0; display:inline-flex; margin-top:2px;">${icon('timer', 'style="width:11px;height:11px;display:block;"')}</span><span>Tracked automatically as you study the resources below</span></div>`
             : `<input type="range" min="0" max="100" step="5" value="${m.progress}" data-progress-slider="${m.id}" style="width:100%; max-width:380px; margin-top:6px; accent-color:${color};">`}
-        </div>
-        <div style="display:flex; gap:6px;">
-          <button class="btn btn-secondary btn-sm" data-edit-module="${m.id}">${icon('pencil', 'style="width:12px;height:12px"')}</button>
-          <button class="btn btn-danger btn-sm" data-delete-module="${m.id}">${icon('trash-2', 'style="width:12px;height:12px"')}</button>
         </div>
       </div>
     </div>
@@ -5294,6 +5317,7 @@ textarea.field::placeholder {
 
       <div class="resource-card-meta">
         <span>${r.type === 'youtube' ? (playlist ? 'YouTube playlist' : 'YouTube video') : r.type === 'pdf' ? 'Document' : r.type === 'website' ? 'Website' : 'External link'}</span>
+        ${resourceLengthLabel(r) ? `<span class="resource-module-dot">•</span><span>${esc(resourceLengthLabel(r))}</span>` : ''}
         ${showModule && getModule(r.moduleId) ? `<span class="resource-module-dot">•</span><span>${esc(getModule(r.moduleId).name)}</span>` : ''}
       </div>
     </div>
@@ -5314,55 +5338,6 @@ textarea.field::placeholder {
       }
 
       /* ---------------- Resources Page ---------------- */
-      async function hydrateResourceThumbnails(container) {
-        if (!container) return;
-        const cards = Array.from(container.querySelectorAll('.resource-card[data-open-resource]'));
-        await Promise.allSettled(cards.map(async card => {
-          const resource = DB.resources.find(r => r.id === card.getAttribute('data-open-resource'));
-          if (!resource || resource.type !== 'youtube') return;
-          const thumb = card.querySelector('.res-thumb');
-          const img = card.querySelector('.res-thumb-image');
-          if (!thumb || !img) return;
-
-          const directVideo = ytId(resource.url || '');
-          if (directVideo) {
-            const candidates = [
-              `https://i.ytimg.com/vi/${encodeURIComponent(directVideo)}/maxresdefault.jpg`,
-              `https://i.ytimg.com/vi/${encodeURIComponent(directVideo)}/hqdefault.jpg`
-            ];
-            for (const src of candidates) {
-              const ok = await new Promise(resolve => {
-                const test = new Image();
-                test.onload = () => resolve(test.naturalWidth > 120);
-                test.onerror = () => resolve(false);
-                test.src = src;
-              });
-              if (ok) {
-                img.src = src;
-                img.classList.remove('is-broken');
-                thumb.classList.add('has-real-preview');
-                return;
-              }
-            }
-          }
-
-          // Pure playlist URLs need the Data API to discover their first video.
-          const playlistId = ytPlaylistId(resource.url || '');
-          const key = getYouTubeApiKey();
-          if (!playlistId || !key) return;
-          try {
-            const items = await fetchYouTubePlaylistItems(playlistId, key);
-            const first = items.find(x => x.videoId);
-            if (!first) return;
-            img.src = `https://i.ytimg.com/vi/${encodeURIComponent(first.videoId)}/hqdefault.jpg`;
-            img.classList.remove('is-broken');
-            thumb.classList.add('has-real-preview');
-          } catch (e) {
-            console.warn('Playlist thumbnail unavailable:', e);
-          }
-        }));
-      }
-
       function renderResourcesPage() {
         const types = ["all", "youtube", "pdf", "website", "link"];
         let items = DB.resources;
@@ -6175,8 +6150,17 @@ textarea.field::placeholder {
             Object.assign(r, { type: chosenType, url, title, description, tags });
             toast("Resource updated");
           } else {
-            DB.resources.push({ id: uid(), moduleId, type: chosenType, url, title, description, thumbnail: "", tags, createdAt: now(), progress: 0, status: "Not Started", timeSpent: 0 });
+            const newRes = { id: uid(), moduleId, type: chosenType, url, title, description, thumbnail: "", tags, createdAt: now(), progress: 0, status: "Not Started", timeSpent: 0, targetSeconds: null };
+            DB.resources.push(newRes);
             toast("Resource added");
+            // Look up the resource's real length (video duration / PDF page count) in
+            // the background so the module's progress weighting is accurate without
+            // making the user wait on this dialog.
+            ensureResourceTarget(newRes).then(() => {
+              autoSyncModuleProgress(moduleId);
+              persist();
+              if (State.route === "module" && State.moduleId === moduleId) render();
+            });
           }
           autoSyncModuleProgress(moduleId);
           persist();
@@ -6383,12 +6367,13 @@ textarea.field::placeholder {
         }
 
         // ---- Automatic time-based progress tracking ----
-        const target = RESOURCE_TARGETS[r.type] || 300;
+        // Start from whatever target we already know (real or fallback), then refine
+        // it in the background with the resource's real video duration / PDF page
+        // count once that lookup resolves, rescaling the on-screen % immediately.
+        let target = getResourceTargetSeconds(r);
         const fillEl = document.getElementById("viewer-progress-fill");
         const pctEl = document.getElementById("viewer-progress-pct");
-        const tick = setInterval(() => {
-          if (document.hidden) return;
-          r.timeSpent += 1;
+        const refreshDisplay = () => {
           const pct = Math.min(100, Math.round((r.timeSpent / target) * 100));
           if (pct !== r.progress) {
             const wasComplete = r.progress >= 100;
@@ -6398,6 +6383,17 @@ textarea.field::placeholder {
             if (fillEl) fillEl.style.width = pct + "%";
             if (pctEl) pctEl.textContent = pct + "%";
           }
+        };
+        ensureResourceTarget(r).then(t => {
+          target = t;
+          refreshDisplay();
+          autoSyncModuleProgress(r.moduleId);
+          persist();
+        });
+        const tick = setInterval(() => {
+          if (document.hidden) return;
+          r.timeSpent += 1;
+          refreshDisplay();
           if (r.timeSpent % 5 === 0) { autoSyncModuleProgress(r.moduleId); persist(); }
         }, 1000);
 
