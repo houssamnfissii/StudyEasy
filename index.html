@@ -787,6 +787,61 @@
       height: 100%;
     }
 
+    .module-card-top {
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      min-height:42px;
+      margin-bottom:10px;
+    }
+    .module-card-identity {
+      display:flex;
+      align-items:center;
+      gap:7px;
+      min-width:0;
+    }
+    .module-card .icon-badge {
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 42px;
+      margin:0;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 6px 16px rgba(0,0,0,.08);
+    }
+    .module-card .icon-badge svg { width:19px; height:19px; }
+    .module-priority {
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      min-height:22px;
+      padding:3px 7px;
+      border-radius:999px;
+      background:rgba(255,159,10,.11);
+      border:1px solid rgba(255,159,10,.20);
+      color:#FF9F0A;
+      font-size:9px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .module-priority svg { width:11px; height:11px; }
+    .module-card .module-actions {
+      position:static;
+      display:flex;
+      gap:4px;
+      opacity:1;
+      flex:0 0 auto;
+    }
+    .module-card .module-actions .icon-btn { opacity:0; width:30px; height:30px; }
+    .module-card:hover .module-actions .icon-btn,
+    .module-card:focus-within .module-actions .icon-btn { opacity:1; }
+    @media (hover:none) {
+      .module-card .module-actions .icon-btn { opacity:1; }
+    }
+
     .module-card:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-card-hover);
@@ -1018,6 +1073,10 @@
         filter: brightness(1.1);
       }
     }
+
+    /* Module header owns icon/action positioning; priority no longer floats over actions. */
+    .module-card.on-fire { animation:none; }
+    .module-card.on-fire .glow { animation:none; }
 
     @media (prefers-reduced-motion: reduce) {
 
@@ -2661,7 +2720,7 @@
     /* ---------- Premium resource cards ---------- */
     .resource-card {
       display:grid;
-      grid-template-columns:148px minmax(0,1fr) auto;
+      grid-template-columns:176px minmax(0,1fr) auto;
       gap:14px;
       padding:10px;
       align-items:center;
@@ -2709,8 +2768,8 @@
     }
 
     .res-thumb {
-      width:148px;
-      height:88px;
+      width:176px;
+      height:100px;
       border-radius:14px;
       overflow:hidden;
       position:relative;
@@ -2754,6 +2813,12 @@
     .res-thumb-image.is-broken {
       opacity:0;
     }
+    .res-thumb.has-real-preview .res-preview-fallback { opacity:0; visibility:hidden; }
+    .res-thumb-image { z-index:2; }
+    .res-thumb-shade { z-index:3; }
+    .res-thumb-topline, .res-play-hint, .res-thumb-label { z-index:4; }
+    .res-thumb-playlist .res-thumb-image { object-position:center; }
+    .res-thumb-playlist .res-thumb-overlay { color:#ff6b63; }
 
     .resource-card:hover .res-thumb-image:not(.is-broken) {
       transform:scale(1.055);
@@ -3825,7 +3890,9 @@ textarea.field::placeholder {
         ready: false,
         lastSynced: null,
         syncNeedsReconnect: false,
-        syncPending: false
+        syncPending: false,
+        syncInFlight: false,
+        tokenRefreshInFlight: null
       };
 
       function loadGoogleSession() {
@@ -3893,7 +3960,7 @@ textarea.field::placeholder {
           scheduleProactiveTokenRefresh(true);
           setTimeout(() => {
             if (!document.hidden && Google.signedIn && Google.tokenClient && !Google.accessToken) {
-              try { Google.tokenClient.requestAccessToken({ prompt: "", login_hint: Google.profile.email || undefined }); } catch (e) { }
+              try { Google.tokenClient.requestAccessToken({ prompt: "none", login_hint: Google.profile.email || undefined }); } catch (e) { }
             }
           }, 3500);
 
@@ -3966,6 +4033,7 @@ textarea.field::placeholder {
             toast(`Signed in as ${Google.profile.given_name || Google.profile.name}`);
           } else {
             renderGoogleWidget(); // Update UI if we were already in background mode
+            if (Google.fileId && DB) syncToDriveDebounced();
           }
         } catch (e) {
           console.error("Google Drive setup failed", e);
@@ -3989,28 +4057,38 @@ textarea.field::placeholder {
       }
 
       function ensureAccessToken() {
-        return new Promise((resolve, reject) => {
-          if (Google.accessToken && Date.now() < Google.tokenExpiresAt) { resolve(Google.accessToken); return; }
-          if (!Google.tokenClient) { reject(new Error("Google sign-in not ready")); return; }
-          const prevCallback = Google.tokenClient.callback;
-          Google.tokenClient.callback = (resp) => {
-            Google.tokenClient.callback = prevCallback;
+        if (Google.accessToken && Date.now() < Google.tokenExpiresAt) return Promise.resolve(Google.accessToken);
+        if (!Google.tokenClient) return Promise.reject(new Error("Google sign-in not ready"));
+        if (Google.tokenRefreshInFlight) return Google.tokenRefreshInFlight;
+
+        Google.tokenRefreshInFlight = new Promise((resolve, reject) => {
+          const client = Google.tokenClient;
+          const previous = client.callback;
+          client.callback = (resp) => {
+            client.callback = previous;
+            Google.tokenRefreshInFlight = null;
             if (resp.error) {
               Google.syncNeedsReconnect = true;
               renderGoogleWidget();
-              reject(resp);
+              reject(new Error(resp.error));
               return;
             }
             Google.syncNeedsReconnect = false;
             Google.accessToken = resp.access_token;
             Google.tokenExpiresAt = Date.now() + ((resp.expires_in || 3600) * 1000) - 60000;
+            Google.signedIn = true;
+            saveGoogleSession();
+            renderGoogleWidget();
             resolve(Google.accessToken);
           };
-          // prompt:"" = silent refresh. login_hint tells Google exactly which
-          // account we mean so it can skip the account-chooser step if it does
-          // need to briefly reconfirm the session.
-          Google.tokenClient.requestAccessToken({ prompt: "", login_hint: Google.profile ? Google.profile.email : undefined });
+          try {
+            client.requestAccessToken({ prompt: "none", login_hint: Google.profile?.email || undefined });
+          } catch (e) {
+            Google.tokenRefreshInFlight = null;
+            reject(e);
+          }
         });
+        return Google.tokenRefreshInFlight;
       }
 
       // Refresh the access token a few minutes before it actually expires,
@@ -4146,11 +4224,12 @@ textarea.field::placeholder {
         saveGoogleSession();
       }
 
-      const syncToDriveDebounced = debounce(() => {
+      const syncToDriveDebounced = debounce(async () => {
         if (Google.signedIn && Google.fileId && Google.tokenClient) {
           Google.syncPending = true;
           renderGoogleWidget();
-          pushToDrive(false)
+          ensureAccessToken()
+            .then(() => pushToDrive(false))
             .then(() => { Google.syncPending = false; renderGoogleWidget(); })
             .catch(e => {
               // Never interrupt the user for this — their edit is already safe
@@ -4172,7 +4251,7 @@ textarea.field::placeholder {
           if (Google.signedIn && Google.fileId && Google.tokenClient && !Google.syncNeedsReconnect) {
             syncToDriveDebounced();
           }
-        }, 60000);
+        }, 15000);
       }
 
       // Catch up the moment the tab regains focus or the network comes back —
@@ -4181,7 +4260,7 @@ textarea.field::placeholder {
       document.addEventListener("visibilitychange", () => {
         if (!document.hidden && Google.signedIn && Google.fileId) {
           // Sync silently; never force a login overlay or rebuild the current view.
-          pullFromDrive().catch(() => { });
+          ensureAccessToken().then(() => pullFromDrive()).catch(() => { });
         }
       });
 
@@ -4194,7 +4273,7 @@ textarea.field::placeholder {
           if (!document.hidden && navigator.onLine && Google.signedIn && Google.fileId) {
             pullFromDrive().catch(() => { });
           }
-        }, 120000);
+        }, 60000);
       }
       startBackgroundSync();
       window.addEventListener("online", () => {
@@ -4350,7 +4429,14 @@ textarea.field::placeholder {
         setTimeout(() => { el.style.transition = "opacity .2s ease, transform .2s ease"; el.style.opacity = "0"; el.style.transform = "translateY(6px)"; setTimeout(() => el.remove(), 200); }, 2600);
       }
 
-      function icon(name, attrs = "") { return `<i data-lucide="${name}" ${attrs}></i>`; }
+      // Lucide does not ship the YouTube brand mark. Keep it inline so the
+      // resource icon never disappears when the Lucide set changes/doesn't contain it.
+      function icon(name, attrs = "") {
+        if (name === "youtube") {
+          return `<svg ${attrs} viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.51A3.02 3.02 0 0 0 .5 6.2 31.2 31.2 0 0 0 0 12a31.2 31.2 0 0 0 .5 5.8 3.02 3.02 0 0 0 2.12 2.14c1.88.51 9.38.51 9.38.51s7.5 0 9.38-.51a3.02 3.02 0 0 0 2.12-2.14A31.2 31.2 0 0 0 24 12a31.2 31.2 0 0 0-.5-5.8ZM9.55 15.6V8.4L15.8 12l-6.25 3.6Z"/></svg>`;
+        }
+        return `<i data-lucide="${name}" ${attrs}></i>`;
+      }
       function renderIcons(container) { lucide.createIcons({ nodes: container ? [container] : undefined }); }
 
       /* ---------------- State ---------------- */
@@ -4469,6 +4555,7 @@ textarea.field::placeholder {
         }
         renderIcons(view);
         attachViewHandlers();
+        hydrateResourceThumbnails(view);
         if (State.route === "schedule") initScheduleDnD();
         view.classList.remove("fade-in");
         void view.offsetWidth;
@@ -4591,13 +4678,17 @@ textarea.field::placeholder {
         const isImportant = (m.priority === "High" || m.priority === "Critical") && m.status !== "Completed";
         return `
   <div class="panel module-card ${isImportant ? 'on-fire' : ''}" data-open-module="${m.id}">
-    ${isImportant ? `<div class="fire-badge" title="${m.priority} priority — active focus">${icon('flame')}</div>` : ""}
-    <div class="module-actions">
-      <button class="icon-btn" data-open-module="${m.id}" title="Open">${icon('arrow-up-right')}</button>
-      <button class="icon-btn" data-edit-module="${m.id}" title="Edit">${icon('pencil')}</button>
-      <button class="icon-btn" data-delete-module="${m.id}" title="Delete">${icon('trash-2')}</button>
+    <div class="module-card-top">
+      <div class="module-card-identity">
+        <div class="icon-badge" style="background:${color}22; color:${color};">${icon(m.icon)}</div>
+        ${isImportant ? `<span class="module-priority" title="${m.priority} priority">${icon('flame')} ${esc(m.priority)}</span>` : ""}
+      </div>
+      <div class="module-actions">
+        <button class="icon-btn" data-open-module="${m.id}" title="Open">${icon('arrow-up-right')}</button>
+        <button class="icon-btn" data-edit-module="${m.id}" title="Edit">${icon('pencil')}</button>
+        <button class="icon-btn" data-delete-module="${m.id}" title="Delete">${icon('trash-2')}</button>
+      </div>
     </div>
-    <div class="icon-badge" style="background:${color}22; color:${color};">${icon(m.icon)}</div>
     <h3>${esc(m.name)}</h3>
     <p class="desc">${esc(m.description || "No description yet.")}</p>
     <div style="font-size:10.5px; font-weight:700; color:var(--text-tertiary); margin-bottom:4px;">${m.progress}% Complete</div>
@@ -5223,6 +5314,55 @@ textarea.field::placeholder {
       }
 
       /* ---------------- Resources Page ---------------- */
+      async function hydrateResourceThumbnails(container) {
+        if (!container) return;
+        const cards = Array.from(container.querySelectorAll('.resource-card[data-open-resource]'));
+        await Promise.allSettled(cards.map(async card => {
+          const resource = DB.resources.find(r => r.id === card.getAttribute('data-open-resource'));
+          if (!resource || resource.type !== 'youtube') return;
+          const thumb = card.querySelector('.res-thumb');
+          const img = card.querySelector('.res-thumb-image');
+          if (!thumb || !img) return;
+
+          const directVideo = ytId(resource.url || '');
+          if (directVideo) {
+            const candidates = [
+              `https://i.ytimg.com/vi/${encodeURIComponent(directVideo)}/maxresdefault.jpg`,
+              `https://i.ytimg.com/vi/${encodeURIComponent(directVideo)}/hqdefault.jpg`
+            ];
+            for (const src of candidates) {
+              const ok = await new Promise(resolve => {
+                const test = new Image();
+                test.onload = () => resolve(test.naturalWidth > 120);
+                test.onerror = () => resolve(false);
+                test.src = src;
+              });
+              if (ok) {
+                img.src = src;
+                img.classList.remove('is-broken');
+                thumb.classList.add('has-real-preview');
+                return;
+              }
+            }
+          }
+
+          // Pure playlist URLs need the Data API to discover their first video.
+          const playlistId = ytPlaylistId(resource.url || '');
+          const key = getYouTubeApiKey();
+          if (!playlistId || !key) return;
+          try {
+            const items = await fetchYouTubePlaylistItems(playlistId, key);
+            const first = items.find(x => x.videoId);
+            if (!first) return;
+            img.src = `https://i.ytimg.com/vi/${encodeURIComponent(first.videoId)}/hqdefault.jpg`;
+            img.classList.remove('is-broken');
+            thumb.classList.add('has-real-preview');
+          } catch (e) {
+            console.warn('Playlist thumbnail unavailable:', e);
+          }
+        }));
+      }
+
       function renderResourcesPage() {
         const types = ["all", "youtube", "pdf", "website", "link"];
         let items = DB.resources;
