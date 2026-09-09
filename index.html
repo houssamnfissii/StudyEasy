@@ -4120,7 +4120,9 @@ textarea.field::placeholder {
             client.callback = previous;
             Google.tokenRefreshInFlight = null;
             if (resp.error) {
-              Google.syncNeedsReconnect = true;
+              // A silent refresh failure is temporary. Keep the app/session alive
+              // and let the background retry recover the Drive token automatically.
+              Google.syncNeedsReconnect = false;
               renderGoogleWidget();
               reject(new Error(resp.error));
               return;
@@ -4174,6 +4176,21 @@ textarea.field::placeholder {
         const res = await fetch(url, Object.assign({}, opts, { headers }));
         if (!res.ok) {
           const txt = await res.text().catch(() => "");
+          // A stale token can happen even when the cached expiry says it is valid.
+          // Clear it and retry the exact request once through the shared silent
+          // token-refresh promise. This prevents the app from falling into login.
+          if (res.status === 401) {
+            Google.accessToken = null;
+            Google.tokenExpiresAt = 0;
+            const freshToken = await ensureAccessToken();
+            const retryHeaders = Object.assign({}, opts.headers || {}, { Authorization: `Bearer ${freshToken}` });
+            const retryRes = await fetch(url, Object.assign({}, opts, { headers: retryHeaders }));
+            if (!retryRes.ok) {
+              const retryTxt = await retryRes.text().catch(() => "");
+              throw new Error(`Drive API ${retryRes.status}: ${retryTxt}`);
+            }
+            return retryRes;
+          }
           throw new Error(`Drive API ${res.status}: ${txt}`);
         }
         return res;
@@ -4277,59 +4294,94 @@ textarea.field::placeholder {
       }
 
       const syncToDriveDebounced = debounce(async () => {
-        if (Google.signedIn && Google.fileId && Google.tokenClient) {
+        if (!Google.signedIn || !Google.fileId || !Google.tokenClient || !DB || !navigator.onLine) return;
+        if (Google.syncInFlight) {
           Google.syncPending = true;
-          renderGoogleWidget();
-          ensureAccessToken()
-            .then(() => pushToDrive(false))
-            .then(() => { Google.syncPending = false; renderGoogleWidget(); })
-            .catch(e => {
-              // Never interrupt the user for this — their edit is already safe
-              // in localStorage. Just flag it so the account menu shows a
-              // one-tap "Reconnect" option, and try again shortly.
-              console.error("Drive sync failed", e);
-              Google.syncPending = false;
-              renderGoogleWidget();
-              retryDriveSyncSoon();
-            });
+          return;
         }
-      }, 1500);
+
+        Google.syncInFlight = true;
+        Google.syncPending = true;
+        renderGoogleWidget();
+
+        try {
+          await ensureAccessToken();
+          await pushToDrive(false);
+          Google.syncNeedsReconnect = false;
+          Google.syncPending = false;
+          Google.lastSynced = new Date().toISOString();
+          saveGoogleSession();
+        } catch (e) {
+          // Never log the user out. Keep the local change and retry automatically.
+          console.warn("Drive background sync delayed:", e);
+          Google.syncPending = true;
+          retryDriveSyncSoon(5000);
+        } finally {
+          Google.syncInFlight = false;
+          renderGoogleWidget();
+          if (Google.syncPending && navigator.onLine) retryDriveSyncSoon(1500);
+        }
+      }, 800);
 
       let driveRetryTimer = null;
-      function retryDriveSyncSoon() {
+      function retryDriveSyncSoon(delay = 5000) {
         if (driveRetryTimer) return;
-        driveRetryTimer = setTimeout(() => {
+        driveRetryTimer = setTimeout(async () => {
           driveRetryTimer = null;
-          if (Google.signedIn && Google.fileId && Google.tokenClient && !Google.syncNeedsReconnect) {
-            syncToDriveDebounced();
+          if (!Google.signedIn || !Google.fileId || !Google.tokenClient || !DB || !navigator.onLine) return;
+          try {
+            // Always try silent token recovery. Do not require logout/login.
+            await ensureAccessToken();
+            await syncToDriveDebounced();
+          } catch (e) {
+            // Keep retrying while the app is open and online.
+            retryDriveSyncSoon(10000);
           }
-        }, 15000);
+        }, delay);
       }
 
-      // Catch up the moment the tab regains focus or the network comes back —
-      // this is what keeps things feeling "real time" across devices without
-      // asking the user to do anything.
+      // Catch up the moment the tab regains focus or the network comes back.
+      // This never shows the login overlay and never reloads/rebuilds the app.
       document.addEventListener("visibilitychange", () => {
-        if (!document.hidden && Google.signedIn && Google.fileId) {
-          // Sync silently; never force a login overlay or rebuild the current view.
-          ensureAccessToken().then(() => pullFromDrive()).catch(() => { });
+        if (!document.hidden && Google.signedIn && Google.fileId && navigator.onLine) {
+          ensureAccessToken()
+            .then(() => pullFromDrive())
+            .then(() => { if (Google.syncPending) syncToDriveDebounced(); })
+            .catch(() => retryDriveSyncSoon(3000));
         }
       });
 
-      // Lightweight background reconciliation. It is intentionally independent from
-      // render(), so studying never flashes or jumps because Drive is syncing.
+      // Frequent lightweight reconciliation while the app is open.
+      // Local changes are pushed; remote changes are pulled only when remote is newer.
       let backgroundSyncTimer = null;
       function startBackgroundSync() {
         if (backgroundSyncTimer) clearInterval(backgroundSyncTimer);
-        backgroundSyncTimer = setInterval(() => {
-          if (!document.hidden && navigator.onLine && Google.signedIn && Google.fileId) {
-            pullFromDrive().catch(() => { });
+        backgroundSyncTimer = setInterval(async () => {
+          if (document.hidden || !navigator.onLine || !Google.signedIn || !Google.fileId || !DB) return;
+          try {
+            await ensureAccessToken();
+            await pullFromDrive();
+            if (Google.syncPending) syncToDriveDebounced();
+          } catch (e) {
+            retryDriveSyncSoon(3000);
           }
-        }, 60000);
+        }, 15000);
       }
       startBackgroundSync();
+
       window.addEventListener("online", () => {
-        if (Google.signedIn && Google.fileId) syncToDriveDebounced();
+        if (Google.signedIn && Google.fileId) {
+          ensureAccessToken()
+            .then(() => pullFromDrive())
+            .then(() => syncToDriveDebounced())
+            .catch(() => retryDriveSyncSoon(1000));
+        }
+      });
+
+      window.addEventListener("focus", () => {
+        if (!document.hidden && navigator.onLine && Google.signedIn && Google.fileId) {
+          ensureAccessToken().then(() => pullFromDrive()).catch(() => retryDriveSyncSoon(1000));
+        }
       });
 
       async function uploadFileToDrive(file) {
@@ -4385,9 +4437,9 @@ textarea.field::placeholder {
         if (!el) return;
         if (Google.profile) {
           const statusDot = Google.syncNeedsReconnect ? "ga-dot-warn" : (Google.syncPending ? "ga-dot-busy" : "ga-dot-ok");
-          const statusLine = Google.syncNeedsReconnect
-            ? `<div class="ga-menu-sub ga-menu-sub-warn">Sync paused — tap Reconnect</div>`
-            : Google.syncPending
+          const statusLine = Google.syncPending
+            ? `<div class="ga-menu-sub">Syncing automatically…</div>`
+            :
               ? `<div class="ga-menu-sub">Syncing…</div>`
               : `<div class="ga-menu-sub">${Google.lastSynced ? "Synced " + fmtDate(Google.lastSynced) : "Not yet synced"}</div>`;
           el.innerHTML = `
@@ -4425,8 +4477,11 @@ textarea.field::placeholder {
           e.stopPropagation();
           toast("Syncing with Google Drive…");
           try {
-            await ensureAccessToken(); // this is the one moment a reconnect prompt is allowed to show
+            await ensureAccessToken();
             await ensureDriveFile();
+            await pullFromDrive();
+            if (DB) await pushToDrive(false);
+            Google.syncPending = false;
             toast("Synced");
           }
           catch (err) { console.error(err); toast("Sync failed — will retry automatically", "error"); }
