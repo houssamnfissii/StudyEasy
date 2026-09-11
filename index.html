@@ -6461,7 +6461,6 @@ textarea.field::placeholder {
       const COMMANDS = [
         { label: "Create Module", icon: "plus", action: () => { navigate("modules"); setTimeout(() => openModuleDialog(), 0); } },
         { label: "Open Schedule", icon: "calendar-days", action: () => navigate("schedule") },
-        { label: "Create Note", icon: "notebook-pen", action: () => { if (DB.modules[0]) openNoteDialog(DB.modules[0].id); else toast("Create a module first", "error"); } },
         { label: "Toggle Dark Mode", icon: "moon", action: () => setTheme(DB.settings.theme === 'dark' ? 'light' : 'dark') },
         { label: "Open Settings", icon: "settings", action: () => navigate("settings") },
         { label: "Open Dashboard", icon: "layout-dashboard", action: () => navigate("dashboard") },
