@@ -2717,37 +2717,6 @@
       }
     }
 
-    /* ---------- Premium Drive connection modal ---------- */
-    .drive-sync-modal{max-width:460px!important;overflow:hidden!important}
-    .drive-sync-hero{position:relative;padding:26px 22px 20px;text-align:center;overflow:hidden}
-    .drive-sync-orb{width:72px;height:72px;margin:2px auto 16px;border-radius:24px;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,rgba(10,132,255,.18),rgba(100,210,255,.08));border:1px solid rgba(10,132,255,.24);color:var(--accent);box-shadow:0 12px 36px rgba(10,132,255,.16),inset 0 1px rgba(255,255,255,.08);animation:driveOrbFloat 3s ease-in-out infinite}
-    .drive-sync-orb svg{width:30px;height:30px}
-    .drive-sync-orb.busy{animation:driveOrbSpin 1.2s linear infinite}
-    .drive-sync-orb.ok{background:rgba(50,215,75,.12);border-color:rgba(50,215,75,.25);color:var(--success);animation:driveSuccess .45s var(--ease) both}
-    .drive-sync-orb.warn{background:rgba(255,159,10,.12);border-color:rgba(255,159,10,.25);color:var(--warn);animation:none}
-    .drive-sync-title{font-size:19px;font-weight:850;letter-spacing:-.025em;margin:0 0 6px}
-    .drive-sync-copy{margin:0 auto;max-width:340px;color:var(--text-secondary);font-size:12.5px;line-height:1.55}
-    .drive-sync-steps{display:flex;flex-direction:column;gap:8px;padding:0 18px 18px}
-    .drive-sync-step{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:12px;background:var(--field-bg);border:1px solid var(--field-border);font-size:11.5px;color:var(--text-secondary);transition:.2s var(--ease)}
-    .drive-sync-step.active{border-color:rgba(var(--accent-rgb),.28);background:rgba(var(--accent-rgb),.07);color:var(--text-primary)}
-    .drive-sync-step.done{border-color:rgba(50,215,75,.22);background:rgba(50,215,75,.06)}
-    .drive-sync-step-icon{width:28px;height:28px;flex:0 0 28px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--panel-bg-solid);color:var(--text-tertiary)}
-    .drive-sync-step.active .drive-sync-step-icon{color:var(--accent)}
-    .drive-sync-step.done .drive-sync-step-icon{color:var(--success)}
-    .drive-sync-footer{display:flex;gap:8px;padding:14px 18px;border-top:1px solid var(--panel-border);background:var(--panel-bg-solid)}
-    .drive-sync-footer .btn{flex:1;justify-content:center;min-height:42px}
-    @keyframes driveOrbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-    @keyframes driveOrbSpin{to{transform:rotate(360deg)}}
-    @keyframes driveSuccess{from{transform:scale(.82);opacity:.4}to{transform:scale(1);opacity:1}}
-    @media(max-width:640px){.drive-sync-modal{border-radius:var(--radius-xl) var(--radius-xl) 0 0!important}.drive-sync-hero{padding-top:22px}.drive-sync-footer{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}}
-
-    .m101-resource-intro{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding:14px;margin-bottom:12px;background:linear-gradient(135deg,rgba(var(--accent-rgb),.08),transparent 60%),var(--panel-bg)}
-    .m101-resource-icon{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:rgba(var(--accent-rgb),.12);color:var(--accent);border:1px solid rgba(var(--accent-rgb),.18)}
-    .m101-resource-icon svg{width:20px;height:20px}
-    .m101-resource-intro h3{font-size:13.5px;margin:3px 0 5px;letter-spacing:-.01em}
-    .m101-resource-intro p{font-size:11.5px;line-height:1.55;color:var(--text-secondary);margin:0;max-width:720px}
-    @media(max-width:520px){.m101-resource-intro{grid-template-columns:36px minmax(0,1fr);padding:12px}.m101-resource-icon{width:36px;height:36px;border-radius:11px}.m101-resource-icon svg{width:17px;height:17px}}
-
     /* ---------- Premium resource cards ---------- */
     .resource-card {
       display:grid;
@@ -4213,7 +4182,7 @@ textarea.field::placeholder {
         return Google.pdfFolderId;
       }
 
-      async function ensureDriveFile({silent=false} = {}) {
+      async function ensureDriveFile() {
         const folderId = await ensureDriveFolder();
         if (!Google.fileId) {
           const q = `name='${GDRIVE_DATA_FILE}' and '${folderId}' in parents and trashed=false`;
@@ -4222,16 +4191,16 @@ textarea.field::placeholder {
           if (data.files && data.files.length) Google.fileId = data.files[0].id;
         }
         if (Google.fileId) {
-          await pullFromDrive({silent});
+          await pullFromDrive();
         } else {
           await pushToDrive(true);
-          if (!silent) toast("Backed up to Google Drive");
+          toast("Backed up to Google Drive");
         }
         Google.lastSynced = new Date().toISOString();
         saveGoogleSession();
       }
 
-      async function pullFromDrive({silent=false} = {}) {
+      async function pullFromDrive() {
         if (!Google.fileId) return;
         const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${Google.fileId}?alt=media`);
         const remote = await res.json();
@@ -4245,7 +4214,8 @@ textarea.field::placeholder {
           if (!DB.meta) DB.meta = { lastModified: new Date().toISOString() };
           saveData(DB);
           applyTheme();
-          if (!silent) { render(); toast("Synced latest data from Google Drive"); }
+          render();
+          toast("Synced latest data from Google Drive");
         } else if (localTime > remoteTime) {
           // Update Drive since we have newer local edits
           await pushToDrive(false);
@@ -4314,7 +4284,7 @@ textarea.field::placeholder {
       // No background authorization request is ever made.
       document.addEventListener("visibilitychange", () => {
         if (!document.hidden && Google.signedIn && Google.fileId && navigator.onLine && Google.accessToken) {
-          pullFromDrive({silent:true}).catch(() => { });
+          pullFromDrive().catch(() => { });
         }
       });
 
@@ -4323,7 +4293,7 @@ textarea.field::placeholder {
         if (backgroundSyncTimer) clearInterval(backgroundSyncTimer);
         backgroundSyncTimer = setInterval(() => {
           if (!document.hidden && navigator.onLine && Google.signedIn && Google.fileId && Google.accessToken) {
-            pullFromDrive({silent:true}).catch(() => { });
+            pullFromDrive().catch(() => { });
             if (Google.syncPending) syncToDriveDebounced();
           }
         }, 30000);
@@ -4332,14 +4302,14 @@ textarea.field::placeholder {
 
       window.addEventListener("online", () => {
         if (Google.signedIn && Google.fileId && Google.accessToken) {
-          pullFromDrive({silent:true}).catch(() => { });
+          pullFromDrive().catch(() => { });
           syncToDriveDebounced();
         }
       });
 
       window.addEventListener("focus", () => {
         if (!document.hidden && navigator.onLine && Google.signedIn && Google.fileId && Google.accessToken) {
-          pullFromDrive({silent:true}).catch(() => { });
+          pullFromDrive().catch(() => { });
         }
       });
 
@@ -4391,103 +4361,13 @@ textarea.field::placeholder {
         toast("Signed out — local data cleared");
       }
 
-      function openDriveSyncModal() {
-        const connected = !!Google.profile;
-        openModal(`
-          <div class="modal-window drive-sync-modal" id="drive-sync-modal">
-            <div class="drive-sync-hero">
-              <div class="drive-sync-orb" id="drive-sync-orb">${icon(connected ? 'cloud-cog' : 'cloud')}</div>
-              <h2 class="drive-sync-title" id="drive-sync-title">${connected ? 'Connect & sync' : 'Connect Google Drive'}</h2>
-              <p class="drive-sync-copy" id="drive-sync-copy">${connected ? 'StudyEasy will reconnect to Drive and synchronize your data without refreshing the app.' : 'Your StudyEasy data stays local first. Connect Drive to create or restore your private backup.'}</p>
-            </div>
-            <div class="drive-sync-steps" id="drive-sync-steps">
-              <div class="drive-sync-step active" data-sync-step="auth"><span class="drive-sync-step-icon">${icon(connected ? 'check' : 'key-round')}</span><span>${connected ? 'Google account ready' : 'Secure Google authorization'}</span></div>
-              <div class="drive-sync-step" data-sync-step="drive"><span class="drive-sync-step-icon">${icon('folder-sync')}</span><span>Connect StudyEasy to Drive</span></div>
-              <div class="drive-sync-step" data-sync-step="data"><span class="drive-sync-step-icon">${icon('refresh-cw')}</span><span>Sync your data in the background</span></div>
-            </div>
-            <div class="drive-sync-footer">
-              <button class="btn btn-secondary" data-close-modal>Cancel</button>
-              <button class="btn btn-primary" id="drive-sync-start">${icon('refresh-cw')} <span>Continue</span></button>
-            </div>
-          </div>
-        `);
-        const btn=document.getElementById('drive-sync-start');
-        if(btn) btn.addEventListener('click', runDriveSync);
-      }
-
-      function setDriveSyncStep(name, state='active') {
-        const el=document.querySelector(`[data-sync-step="${name}"]`);
-        if(!el) return;
-        el.classList.remove('active','done');
-        if(state==='active') el.classList.add('active');
-        if(state==='done') el.classList.add('done');
-        const ic=el.querySelector('.drive-sync-step-icon');
-        if(ic) { ic.innerHTML=icon(state==='done'?'check':name==='auth'?'key-round':name==='drive'?'folder-sync':'refresh-cw'); renderIcons(ic); }
-      }
-
-      async function runDriveSync() {
-        if(Google.syncInFlight) return;
-        Google.syncInFlight=true;
-        const btn=document.getElementById('drive-sync-start');
-        const orb=document.getElementById('drive-sync-orb');
-        const title=document.getElementById('drive-sync-title');
-        const copy=document.getElementById('drive-sync-copy');
-        if(btn){btn.disabled=true;btn.innerHTML=icon('loader-circle')+'<span>Working…</span>';renderIcons(btn);}
-        if(orb){orb.className='drive-sync-orb busy';orb.innerHTML=icon('refresh-cw');renderIcons(orb);}
-        if(title) title.textContent='Connecting securely…';
-        if(copy) copy.textContent='Checking the existing Google authorization first. No Google authorization window is requested when silent access is available.';
-        try {
-          if(!Google.accessToken || Date.now()>=Google.tokenExpiresAt) {
-            if(!Google.tokenClient) throw new Error('Google services are not ready yet.');
-            setDriveSyncStep('auth','active');
-            await requestGoogleAccessSilently();
-          }
-          setDriveSyncStep('auth','done'); setDriveSyncStep('drive','active');
-          if(copy) copy.textContent='Connecting to your StudyEasy Drive folder…';
-          await ensureDriveFile({silent:true});
-          setDriveSyncStep('drive','done'); setDriveSyncStep('data','active');
-          if(copy) copy.textContent='Synchronizing your latest data in the background…';
-          if(DB) await pushToDrive(false);
-          setDriveSyncStep('data','done');
-          Google.syncPending=false; Google.syncNeedsReconnect=false; Google.syncInFlight=false; Google.lastSynced=new Date().toISOString(); saveGoogleSession(); renderGoogleWidget();
-          if(orb){orb.className='drive-sync-orb ok';orb.innerHTML=icon('check');renderIcons(orb);}
-          if(title) title.textContent='Sync complete';
-          if(copy) copy.textContent='Everything is synchronized. You can keep using StudyEasy while background sync continues normally.';
-          if(btn){btn.disabled=false;btn.innerHTML=icon('check')+'<span>Done</span>';renderIcons(btn);btn.onclick=closeModal;}
-          setTimeout(closeModal,900);
-        } catch(e) {
-          Google.syncInFlight=false; Google.syncPending=true; renderGoogleWidget();
-          console.warn('Drive connection delayed:',e);
-          if(orb){orb.className='drive-sync-orb warn';orb.innerHTML=icon('shield-alert');renderIcons(orb);}
-          if(title) title.textContent='Authorization needed';
-          if(copy) copy.textContent='Google requires an interactive authorization step before Drive can be accessed. StudyEasy did not open that window automatically.';
-          setDriveSyncStep('auth','active');
-          if(btn){btn.disabled=false;btn.innerHTML=icon('x')+'<span>Close</span>';renderIcons(btn);btn.onclick=closeModal;}
-        }
-      }
-
-      function requestGoogleAccessSilently() {
-        return new Promise((resolve,reject)=>{
-          if(!Google.tokenClient || Google.tokenRequestInFlight) return reject(new Error('Google authorization request is already running.'));
-          Google.tokenRequestInFlight=true;
-          const previous=Google.tokenClient;
-          // Reinitialize only to use prompt=none for this explicit in-app action.
-          Google.tokenClient=google.accounts.oauth2.initTokenClient({client_id:GOOGLE_CLIENT_ID,scope:GOOGLE_SCOPES,login_hint:Google.profile?.email||undefined,callback:resp=>{
-            Google.tokenRequestInFlight=false;
-            if(resp.error){Google.accessToken=null;Google.tokenExpiresAt=0;Google.syncNeedsReconnect=true;renderGoogleWidget();reject(new Error(resp.error));return;}
-            Google.accessToken=resp.access_token;Google.tokenExpiresAt=Date.now()+((resp.expires_in||3600)*1000)-60000;Google.signedIn=true;Google.syncNeedsReconnect=false;scheduleProactiveTokenRefresh();saveGoogleSession();resolve(resp.access_token);
-          }});
-          try { previous; Google.tokenClient.requestAccessToken({prompt:'none',login_hint:Google.profile?.email||undefined}); } catch(e){Google.tokenRequestInFlight=false;reject(e);}
-        });
-      }
-
       function renderGoogleWidget() {
         const el = document.getElementById("google-account");
         if (!el) return;
         if (Google.profile) {
           const statusDot = Google.syncNeedsReconnect ? "ga-dot-warn" : (Google.syncPending ? "ga-dot-busy" : "ga-dot-ok");
           const statusLine = Google.syncNeedsReconnect
-            ? `<div class="ga-menu-sub ga-menu-sub-warn">Drive connection needs attention — use Connect & sync</div>`
+            ? `<div class="ga-menu-sub ga-menu-sub-warn">Drive authorization needed — tap Sync now</div>`
             : Google.syncPending
               ? `<div class="ga-menu-sub">Syncing…</div>`
               : `<div class="ga-menu-sub">${Google.lastSynced ? "Synced " + fmtDate(Google.lastSynced) : "Not yet synced"}</div>`;
@@ -4520,10 +4400,28 @@ textarea.field::placeholder {
           userBtn.addEventListener("click", (e) => { e.stopPropagation(); menu.classList.toggle("open"); });
         }
         const syncBtn = document.getElementById("ga-sync-now");
-        if (syncBtn) syncBtn.addEventListener("click", (e) => {
+        if (syncBtn) syncBtn.addEventListener("click", async (e) => {
           e.stopPropagation();
+          if (!Google.accessToken || Date.now() >= Google.tokenExpiresAt) {
+            if (menu) menu.classList.remove("open");
+            toast("Google authorization required — opening securely…");
+            requestInteractiveGoogleAccess();
+            return;
+          }
+          toast("Syncing with Google Drive…");
+          try {
+            await ensureDriveFile();
+            if (DB) await pushToDrive(false);
+            Google.syncPending = false;
+            Google.syncNeedsReconnect = false;
+            toast("Synced");
+          } catch (err) {
+            console.error(err);
+            Google.syncPending = true;
+            toast("Sync failed — your local data is safe", "error");
+          }
           if (menu) menu.classList.remove("open");
-          openDriveSyncModal();
+          renderGoogleWidget();
         });
         const signoutBtn = document.getElementById("ga-signout");
         if (signoutBtn) signoutBtn.addEventListener("click", (e) => { e.stopPropagation(); googleSignOut(); });
@@ -4649,6 +4547,26 @@ textarea.field::placeholder {
       }
       function celebrate() { toast("Module completed 🎉", "success"); }
 
+      // Once a module has resources, its progress is derived automatically from how much
+      // of each resource has been studied — no manual slider needed.
+      function autoSyncModuleProgress(moduleId) {
+        const m = getModule(moduleId); if (!m) return;
+        const res = moduleResources(moduleId);
+        if (!res.length) return;
+        res.forEach(resourceProgressDefaults);
+        // Weighted average: effort-heavy resources contribute more than tiny links.
+        // A resource's own completion is still capped at 100 and cannot exceed its weight.
+        const totalWeight = res.reduce((sum,r)=>sum+Math.max(1,resourceLearningTarget(r)),0);
+        const score = res.reduce((sum,r)=>sum+(Math.max(0,Math.min(100,Number(r.progress)||0))*Math.max(1,resourceLearningTarget(r))),0);
+        const avg = totalWeight ? Math.round(score/totalWeight) : 0;
+        const was100 = m.progress >= 100;
+        m.progress = Math.max(0,Math.min(100,avg));
+        if (m.progress >= 100) { m.status = "Completed"; if (!was100) celebrate(); }
+        else if (m.progress > 0) m.status = "In Progress";
+        else if (m.status !== "Paused") m.status = "Not Started";
+        m.updatedAt = now();
+      }
+
       /* ---------------- Sidebar ---------------- */
       const NAV_ITEMS = [
         { key: "dashboard", label: "Dashboard", icon: "layout-dashboard" },
@@ -4734,6 +4652,8 @@ textarea.field::placeholder {
         const total=DB.modules.length, completed=DB.modules.filter(m=>m.status==='Completed').length, inProgress=DB.modules.filter(m=>m.status==='In Progress').length;
         const resCount=DB.resources.length;
         DB.resources.forEach(resourceProgressDefaults);
+        DB.modules.forEach(m=>{if(moduleResources(m.id).length)autoSyncModuleProgress(m.id);});
+        const avgProgress=total?Math.round(DB.modules.reduce((a,m)=>a+(Number(m.progress)||0),0)/total):0;
         const todayIdx=new Date().getDay(), todayKey=DAYS[(todayIdx+6)%7];
         const todayItems=DB.schedule.filter(s=>s.day===todayKey).sort((a,b)=>a.order-b.order), todayDone=todayItems.filter(s=>s.completed).length;
         const hour=new Date().getHours(), greeting=hour<12?'Good morning':hour<18?'Good afternoon':'Good evening';
@@ -4741,7 +4661,8 @@ textarea.field::placeholder {
         const recentModules=[...DB.modules].sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt)).slice(0,4);
         return `
     <div class="panel dashboard-hero">
-      <div class="dashboard-hero-copy"><h1 class="page-title">${greeting}${firstName?', '+esc(firstName):''}</h1><p class="page-sub">Your learning cockpit — see what matters, continue where you stopped, and keep your study workspace organized.</p></div>
+      <div class="dashboard-hero-copy"><h1 class="page-title">${greeting}${firstName?', '+esc(firstName):''}</h1><p class="page-sub">Your learning cockpit — see what matters, continue where you stopped, and keep your progress moving.</p></div>
+      <div class="dashboard-hero-progress"><div class="dashboard-hero-progress-top"><span class="dashboard-hero-progress-label">Overall roadmap</span><span class="dashboard-hero-progress-value">${avgProgress}%</span></div><div class="progress-track" style="height:8px"><div class="progress-fill" style="width:${avgProgress}%"></div></div></div>
     </div>
     <div class="grid-stats">${statCard('layers','Modules',total,'blue')} ${statCard('check-circle-2','Completed',completed,'green')} ${statCard('loader','In Progress',inProgress,'orange')} ${statCard('library','Resources',resCount,'purple')}</div>
     <div class="dashboard-layout mb-section">
@@ -4753,7 +4674,7 @@ textarea.field::placeholder {
         <div><div class="flex-between" style="margin-bottom:10px"><div class="eyebrow">Recently updated</div><span class="btn btn-ghost btn-sm" data-nav="modules">View all ${icon('arrow-right','style="width:11px;height:11px"')}</span></div><div class="dashboard-recent-grid">${recentModules.map(m=>moduleCard(m)).join('')}</div></div>
       </div>
       <div class="dashboard-column">
-        <div class="panel dashboard-panel"><div class="dashboard-panel-head"><div class="dashboard-panel-title"><span class="title-icon">${icon('layers-3')}</span><span>Module status</span></div><span style="font-size:10px;color:var(--text-tertiary)">${total} modules</span></div><div class="dashboard-progress-list">${DB.modules.slice(0,7).map(m=>{const c=COLORS[m.color]||COLORS.blue;return `<div class="dashboard-progress-item"><div class="dashboard-progress-name" style="display:flex;align-items:center;gap:7px"><span style="width:7px;height:7px;border-radius:50%;background:${c};flex:0 0 7px"></span>${esc(m.name)}</div><div style="text-align:right;font-size:10px;font-weight:800;color:${statusColor(m.status)}">${esc(m.status)}</div></div>`}).join('')||`<div style="font-size:11px;color:var(--text-tertiary)">Create a module to build your learning workspace.</div>`}</div></div>
+        <div class="panel dashboard-panel"><div class="dashboard-panel-head"><div class="dashboard-panel-title"><span class="title-icon">${icon('chart-no-axes-combined')}</span><span>Learning progress</span></div><span style="font-size:10px;color:var(--text-tertiary)">${avgProgress}% overall</span></div><div class="dashboard-progress-list">${DB.modules.slice(0,7).map(m=>{const c=COLORS[m.color]||COLORS.blue;return `<div class="dashboard-progress-item"><div><div class="dashboard-progress-name">${esc(m.name)}</div><div class="progress-track dashboard-progress-track"><div class="progress-fill" style="width:${m.progress}%;background:${c}"></div></div></div><div class="dashboard-progress-pct">${m.progress}%</div></div>`}).join('')||`<div style="font-size:11px;color:var(--text-tertiary)">Create a module to start tracking your roadmap.</div>`}</div></div>
         <div class="panel dashboard-panel"><div class="dashboard-panel-head"><div class="dashboard-panel-title"><span class="title-icon">${icon('target')}</span><span>Study intelligence</span></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="module-detail-stat"><div class="module-detail-stat-label">Studied today</div><div class="module-detail-stat-value">${Math.round(DB.resources.reduce((a,r)=>a+(Number(r.timeSpent)||0),0)/60)} min</div></div><div class="module-detail-stat"><div class="module-detail-stat-label">Completed resources</div><div class="module-detail-stat-value">${DB.resources.filter(r=>(Number(r.progress)||0)>=100).length}</div></div></div></div>
       </div>
     </div>`;
@@ -4815,6 +4736,8 @@ textarea.field::placeholder {
     </div>
     <h3>${esc(m.name)}</h3>
     <p class="desc">${esc(m.description || "No description yet.")}</p>
+    <div style="font-size:10.5px; font-weight:700; color:var(--text-tertiary); margin-bottom:4px;">${m.progress}% Complete</div>
+    <div class="progress-track"><div class="progress-fill" style="width:${m.progress}%; background:linear-gradient(90deg, ${color}, ${color}bb);"></div></div>
     <div class="meta-row">
       <span>${res} Resources · ${notes} Notes</span>
     </div>
@@ -4846,7 +4769,9 @@ textarea.field::placeholder {
         const color=COLORS[m.color]||COLORS.blue, res=moduleResources(m.id), notes=moduleNotes(m.id), sched=moduleSchedule(m.id);
         res.forEach(resourceProgressDefaults);
         const completedRes=res.filter(r=>r.progress>=100).length;
-                        const detailPct=Math.max(0,Math.min(100,Number(m.progress)||0));
+        const totalStudyMin=Math.round(res.reduce((a,r)=>a+(Number(r.timeSpent)||0),0)/60);
+        const totalTargetMin=Math.max(1,Math.round(res.reduce((a,r)=>a+resourceLearningTarget(r),0)/60));
+        const detailPct=Math.max(0,Math.min(100,Number(m.progress)||0));
         return `
     <div class="btn btn-ghost btn-sm" data-nav="modules" style="margin-bottom:12px;width:fit-content;">${icon('arrow-left','style="width:12px;height:12px"')} Modules</div>
     <div class="panel module-detail-hero" style="--module-color:${color}">
@@ -4860,10 +4785,15 @@ textarea.field::placeholder {
           </div>
         </div>
         <p class="page-sub" style="margin:6px 0 0">${esc(m.description||"No description yet.")}</p>
+        <div class="module-detail-progress">
+          <div class="module-detail-progress-head"><span style="font-size:10px;color:var(--text-tertiary);font-weight:800;text-transform:uppercase;letter-spacing:.07em">Module progress</span><span class="module-detail-progress-pct">${detailPct}%</span></div>
+          <div class="progress-track" style="height:8px"><div class="progress-fill" style="width:${detailPct}%;background:linear-gradient(90deg,${color},${color}bb)"></div></div>
+          ${res.length ? `<div class="module-detail-tracking">${icon('sparkles','style="width:12px;height:12px;color:'+color+'"')}<span>Progress is calculated automatically from resource difficulty, video duration, PDF pages, estimated reading time, language factor, and your actual focused study time.</span></div>` : `<input type="range" min="0" max="100" step="5" value="${detailPct}" data-progress-slider="${m.id}" style="width:100%;margin-top:10px;accent-color:${color}">`}
+        </div>
         <div class="module-detail-stats">
           <div class="module-detail-stat"><div class="module-detail-stat-label">Resources</div><div class="module-detail-stat-value">${res.length}</div></div>
-          <div class="module-detail-stat"><div class="module-detail-stat-label">Completed resources</div><div class="module-detail-stat-value">${completedRes}/${res.length||0}</div></div>
-          <div class="module-detail-stat"><div class="module-detail-stat-label">Notes</div><div class="module-detail-stat-value">${notes.length}</div></div>
+          <div class="module-detail-stat"><div class="module-detail-stat-label">Studied</div><div class="module-detail-stat-value">${totalStudyMin} min</div></div>
+          <div class="module-detail-stat"><div class="module-detail-stat-label">Completed</div><div class="module-detail-stat-value">${completedRes}/${res.length||0}</div></div>
         </div>
       </div>
       <div class="module-detail-actions">
@@ -4885,12 +4815,6 @@ textarea.field::placeholder {
       <div></div>
       <button class="btn btn-primary btn-sm" data-open-resource-dialog="${m.id}">${icon('plus', 'style="width:12px;height:12px"')} Add</button>
     </div>
-    ${/m[eé]tier.*formation/i.test(m.name||'') ? `<div class="panel m101-resource-intro">
-      <div class="m101-resource-icon">${icon('graduation-cap')}</div>
-      <div><div class="eyebrow">M101 · Métier et formation</div>
-      <h3>Ressources pour construire ta base professionnelle</h3>
-      <p>Utilise cette page pour centraliser les contenus qui expliquent le métier, le parcours de formation, les compétences attendues et les méthodes de travail. Commence par les ressources de référence, puis complète avec des contenus pratiques et des exemples liés au métier.</p></div>
-    </div>` : ''}
     ${res.length ? `<div class="resources-grid">${res.map(r => resourceCard(r, true)).join("")}</div>` :
             emptyState("library", "No resources yet.", "Attach videos, PDFs, websites or links.", "Add Resource", `data-open-resource-dialog="${m.id}"`)}
   `;
@@ -6297,6 +6221,7 @@ textarea.field::placeholder {
             DB.resources.push({ id: uid(), moduleId, type: chosenType, url, title, description, thumbnail: "", tags, createdAt: now(), progress: 0, status: "Not Started", timeSpent: 0 });
             toast("Resource added");
           }
+          autoSyncModuleProgress(moduleId);
           persist();
           closeModal();
           render();
@@ -6309,6 +6234,7 @@ textarea.field::placeholder {
         confirmDialog(`Delete "${esc(r.title)}"?`, `This resource will be permanently removed.`, () => {
           const moduleId = r.moduleId;
           DB.resources = DB.resources.filter(x => x.id !== id);
+          autoSyncModuleProgress(moduleId);
           persist();
           toast("Resource deleted");
           render();
@@ -6522,6 +6448,7 @@ textarea.field::placeholder {
         const close = () => {
           clearInterval(tick);
           destroyActiveYouTubePlayer();
+          autoSyncModuleProgress(r.moduleId);
           persist();
           root.innerHTML = "";
           render();
@@ -6649,6 +6576,12 @@ textarea.field::placeholder {
           const n = DB.notes.find(x => x.id === el.getAttribute("data-open-note"));
           if (n) openNoteDialog(n.moduleId, n.id);
         }));
+        view.querySelectorAll("[data-progress-slider]").forEach(el => {
+          el.addEventListener("input", () => {
+            setProgress(el.getAttribute("data-progress-slider"), +el.value);
+            render();
+          });
+        });
         view.querySelectorAll("[data-toggle-sched]").forEach(el => el.addEventListener("click", (e) => {
           e.stopPropagation();
           const s = DB.schedule.find(x => x.id === el.getAttribute("data-toggle-sched"));
@@ -6670,7 +6603,12 @@ textarea.field::placeholder {
         });
 
         const settingsSyncBtn = document.getElementById("settings-sync-now");
-        if (settingsSyncBtn) settingsSyncBtn.addEventListener("click", () => openDriveSyncModal());
+        if (settingsSyncBtn) settingsSyncBtn.addEventListener("click", async () => {
+          toast("Syncing with Google Drive…");
+          try { await ensureDriveFile(); toast("Synced"); }
+          catch (e) { console.error(e); toast("Sync failed", "error"); }
+          render();
+        });
         const settingsSignoutBtn = document.getElementById("settings-google-signout");
         if (settingsSignoutBtn) settingsSignoutBtn.addEventListener("click", googleSignOut);
       }
